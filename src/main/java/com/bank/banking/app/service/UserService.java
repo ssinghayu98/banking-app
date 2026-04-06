@@ -1,9 +1,10 @@
 package com.bank.banking.app.service;
 
-import com.bank.banking.app.model.User;
+import com.bank.banking.app.model.Role;
 import com.bank.banking.app.model.Transaction;
-import com.bank.banking.app.repository.UserRepository;
+import com.bank.banking.app.model.User;
 import com.bank.banking.app.repository.TransactionRepository;
+import com.bank.banking.app.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,13 @@ public class UserService {
 
     public User registerUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        if (user.getBalance() == null) {
+            user.setBalance(0.0);
+        }
+
+        user.setRole(Role.USER);
+
         return userRepository.save(user);
     }
 
