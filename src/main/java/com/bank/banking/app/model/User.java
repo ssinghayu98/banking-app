@@ -1,5 +1,6 @@
 package com.bank.banking.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -11,7 +12,10 @@ public class User {
     private Long id;
 
     private String username;
+
+    @JsonIgnore
     private String password;
+
     private Double balance;
 
     @Enumerated(EnumType.STRING)
