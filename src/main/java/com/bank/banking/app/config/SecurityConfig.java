@@ -26,9 +26,14 @@ public class SecurityConfig {
                                 "/auth/**",
                                 "/admin/register",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html"
                         ).permitAll()
-                        .requestMatchers("/bank/**").authenticated()
+
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        .requestMatchers("/bank/**").hasAnyRole("USER", "ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
