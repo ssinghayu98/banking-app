@@ -28,6 +28,11 @@ public class AdminController {
         return userService.getAllUsers();
     }
 
+    @DeleteMapping("/user/{id}")
+    public String deleteUser(@PathVariable Long id) {
+        return userService.deleteUser(id);
+    }
+
     @PostMapping("/deposit")
     public String deposit(@RequestParam Long userId, @RequestParam Double amount) {
         return userService.deposit(userId, amount);

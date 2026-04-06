@@ -118,4 +118,13 @@ public class UserService {
     public List<Transaction> getAllTransactions() {
         return transactionRepository.findAll();
     }
+
+    public String deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        userRepository.delete(user);
+
+        return "User deleted successfully";
+    }
 }
