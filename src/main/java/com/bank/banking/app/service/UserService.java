@@ -1,5 +1,9 @@
 package com.bank.banking.app.service;
 
+import com.bank.banking.app.exception.InsufficientBalanceException;
+import com.bank.banking.app.exception.InvalidAmountException;
+import com.bank.banking.app.exception.InvalidTransferException;
+import com.bank.banking.app.exception.UserNotFoundException;
 import com.bank.banking.app.model.Role;
 import com.bank.banking.app.model.Transaction;
 import com.bank.banking.app.model.User;
@@ -42,8 +46,12 @@ public class UserService {
     }
 
     public String deposit(Long userId, Double amount) {
+        if (amount <= 0) {
+            throw new InvalidAmountException("Amount must be greater than zero");
+        }
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         user.setBalance(user.getBalance() + amount);
         userRepository.save(user);
@@ -60,11 +68,15 @@ public class UserService {
     }
 
     public String withdraw(Long userId, Double amount) {
+        if (amount <= 0) {
+            throw new InvalidAmountException("Amount must be greater than zero");
+        }
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (user.getBalance() < amount) {
-            throw new RuntimeException("Insufficient balance");
+            throw new InsufficientBalanceException("Insufficient balance");
         }
 
         user.setBalance(user.getBalance() - amount);
@@ -83,19 +95,28 @@ public class UserService {
 
     public Double checkBalance(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
         return user.getBalance();
     }
 
     public String transferMoney(Long senderId, Long receiverId, Double amount) {
+        if (amount <= 0) {
+            throw new InvalidAmountException("Amount must be greater than zero");
+        }
+
+        if (senderId.equals(receiverId)) {
+            throw new InvalidTransferException("Sender and receiver cannot be same");
+        }
+
         User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new RuntimeException("Sender not found"));
+                .orElseThrow(() -> new UserNotFoundException("Sender not found"));
 
         User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new RuntimeException("Receiver not found"));
+                .orElseThrow(() -> new UserNotFoundException("Receiver not found"));
 
         if (sender.getBalance() < amount) {
-            throw new RuntimeException("Insufficient balance");
+            throw new InsufficientBalanceException("Insufficient balance");
         }
 
         sender.setBalance(sender.getBalance() - amount);
@@ -121,7 +142,7 @@ public class UserService {
 
     public String deleteUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         userRepository.delete(user);
 
