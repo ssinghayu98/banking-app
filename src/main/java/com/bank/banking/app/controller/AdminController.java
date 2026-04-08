@@ -1,5 +1,6 @@
 package com.bank.banking.app.controller;
 
+import com.bank.banking.app.dto.ApiResponse;
 import com.bank.banking.app.dto.TransferRequest;
 import com.bank.banking.app.model.Transaction;
 import com.bank.banking.app.model.User;
@@ -19,46 +20,54 @@ public class AdminController {
     }
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
-        return userService.registerUser(user);
+    public ApiResponse<User> register(@RequestBody User user) {
+        User savedUser = userService.registerUser(user);
+        return new ApiResponse<>("User registered successfully", savedUser);
     }
 
     @GetMapping("/users")
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ApiResponse<List<User>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
+        return new ApiResponse<>("Users fetched successfully", users);
     }
 
     @DeleteMapping("/user/{id}")
-    public String deleteUser(@PathVariable Long id) {
-        return userService.deleteUser(id);
+    public ApiResponse<Void> deleteUser(@PathVariable Long id) {
+        String message = userService.deleteUser(id);
+        return new ApiResponse<>(message, null);
     }
 
     @PostMapping("/deposit")
-    public String deposit(@RequestParam Long userId, @RequestParam Double amount) {
-        return userService.deposit(userId, amount);
+    public ApiResponse<Void> deposit(@RequestParam Long userId, @RequestParam Double amount) {
+        String message = userService.deposit(userId, amount);
+        return new ApiResponse<>(message, null);
     }
 
     @PostMapping("/withdraw")
-    public String withdraw(@RequestParam Long userId, @RequestParam Double amount) {
-        return userService.withdraw(userId, amount);
+    public ApiResponse<Void> withdraw(@RequestParam Long userId, @RequestParam Double amount) {
+        String message = userService.withdraw(userId, amount);
+        return new ApiResponse<>(message, null);
     }
 
     @GetMapping("/balance/{userId}")
-    public Double checkBalance(@PathVariable Long userId) {
-        return userService.checkBalance(userId);
+    public ApiResponse<Double> checkBalance(@PathVariable Long userId) {
+        Double balance = userService.checkBalance(userId);
+        return new ApiResponse<>("Balance fetched successfully", balance);
     }
 
     @PostMapping("/transfer")
-    public String transferMoney(@RequestBody TransferRequest request) {
-        return userService.transferMoney(
+    public ApiResponse<Void> transferMoney(@RequestBody TransferRequest request) {
+        String message = userService.transferMoney(
                 request.getSenderId(),
                 request.getReceiverId(),
                 request.getAmount()
         );
+        return new ApiResponse<>(message, null);
     }
 
     @GetMapping("/transactions")
-    public List<Transaction> getAllTransactions() {
-        return userService.getAllTransactions();
+    public ApiResponse<List<Transaction>> getAllTransactions() {
+        List<Transaction> transactions = userService.getAllTransactions();
+        return new ApiResponse<>("Transactions fetched successfully", transactions);
     }
 }
