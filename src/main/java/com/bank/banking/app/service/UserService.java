@@ -4,6 +4,7 @@ import com.bank.banking.app.exception.InsufficientBalanceException;
 import com.bank.banking.app.exception.InvalidAmountException;
 import com.bank.banking.app.exception.InvalidTransferException;
 import com.bank.banking.app.exception.UserNotFoundException;
+import com.bank.banking.app.exception.UsernameAlreadyExistsException;
 import com.bank.banking.app.model.Role;
 import com.bank.banking.app.model.Transaction;
 import com.bank.banking.app.model.User;
@@ -30,6 +31,21 @@ public class UserService {
     }
 
     public User registerUser(User user) {
+        if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
+            throw new RuntimeException("Username cannot be empty");
+        }
+
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("Password cannot be empty");
+        }
+
+        String cleanedUsername = user.getUsername().trim();
+        user.setUsername(cleanedUsername);
+
+        if (userRepository.findByUsername(cleanedUsername).isPresent()) {
+            throw new UsernameAlreadyExistsException("Username already exists");
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         if (user.getBalance() == null) {
@@ -46,7 +62,7 @@ public class UserService {
     }
 
     public String deposit(Long userId, Double amount) {
-        if (amount <= 0) {
+        if (amount == null || amount <= 0) {
             throw new InvalidAmountException("Amount must be greater than zero");
         }
 
@@ -68,7 +84,7 @@ public class UserService {
     }
 
     public String withdraw(Long userId, Double amount) {
-        if (amount <= 0) {
+        if (amount == null || amount <= 0) {
             throw new InvalidAmountException("Amount must be greater than zero");
         }
 
@@ -101,7 +117,7 @@ public class UserService {
     }
 
     public String transferMoney(Long senderId, Long receiverId, Double amount) {
-        if (amount <= 0) {
+        if (amount == null || amount <= 0) {
             throw new InvalidAmountException("Amount must be greater than zero");
         }
 
