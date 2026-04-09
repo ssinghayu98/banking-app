@@ -7,6 +7,7 @@ import com.bank.banking.app.model.User;
 import com.bank.banking.app.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,75 +25,89 @@ public class AdminController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<User> register(@RequestBody User user) {
-        logger.info("Admin request to register user with username: {}", user.getUsername());
+    public ApiResponse<User> register(@RequestBody User user, Authentication authentication) {
+        String adminUsername = authentication.getName();
+
+        logger.info("AUDIT -> Admin '{}' requested registration for username '{}'", adminUsername, user.getUsername());
 
         User savedUser = userService.registerUser(user);
 
-        logger.info("User registered successfully with username: {}", savedUser.getUsername());
+        logger.info("AUDIT -> Admin '{}' successfully registered user '{}'", adminUsername, savedUser.getUsername());
 
         return new ApiResponse<>("User registered successfully", savedUser);
     }
 
     @GetMapping("/users")
-    public ApiResponse<List<User>> getAllUsers() {
-        logger.info("Admin request to fetch all users");
+    public ApiResponse<List<User>> getAllUsers(Authentication authentication) {
+        String adminUsername = authentication.getName();
+
+        logger.info("AUDIT -> Admin '{}' requested all users", adminUsername);
 
         List<User> users = userService.getAllUsers();
 
-        logger.info("Fetched all users successfully. Count: {}", users.size());
+        logger.info("AUDIT -> Admin '{}' fetched all users successfully. Count: {}", adminUsername, users.size());
 
         return new ApiResponse<>("Users fetched successfully", users);
     }
 
     @DeleteMapping("/user/{id}")
-    public ApiResponse<Void> deleteUser(@PathVariable Long id) {
-        logger.info("Admin request to delete user with ID: {}", id);
+    public ApiResponse<Void> deleteUser(@PathVariable Long id, Authentication authentication) {
+        String adminUsername = authentication.getName();
+
+        logger.info("AUDIT -> Admin '{}' requested deletion of user ID {}", adminUsername, id);
 
         String message = userService.deleteUser(id);
 
-        logger.info("User deleted successfully with ID: {}", id);
+        logger.info("AUDIT -> Admin '{}' successfully deleted user ID {}", adminUsername, id);
 
         return new ApiResponse<>(message, null);
     }
 
     @PostMapping("/deposit")
-    public ApiResponse<Void> deposit(@RequestParam Long userId, @RequestParam Double amount) {
-        logger.info("Admin request to deposit amount {} to user ID {}", amount, userId);
+    public ApiResponse<Void> deposit(@RequestParam Long userId, @RequestParam Double amount, Authentication authentication) {
+        String adminUsername = authentication.getName();
+
+        logger.info("AUDIT -> Admin '{}' requested deposit of amount {} to user ID {}", adminUsername, amount, userId);
 
         String message = userService.deposit(userId, amount);
 
-        logger.info("Deposit successful. Amount {} deposited to user ID {}", amount, userId);
+        logger.info("AUDIT -> Admin '{}' successfully deposited amount {} to user ID {}", adminUsername, amount, userId);
 
         return new ApiResponse<>(message, null);
     }
 
     @PostMapping("/withdraw")
-    public ApiResponse<Void> withdraw(@RequestParam Long userId, @RequestParam Double amount) {
-        logger.info("Admin request to withdraw amount {} from user ID {}", amount, userId);
+    public ApiResponse<Void> withdraw(@RequestParam Long userId, @RequestParam Double amount, Authentication authentication) {
+        String adminUsername = authentication.getName();
+
+        logger.info("AUDIT -> Admin '{}' requested withdrawal of amount {} from user ID {}", adminUsername, amount, userId);
 
         String message = userService.withdraw(userId, amount);
 
-        logger.info("Withdraw successful. Amount {} withdrawn from user ID {}", amount, userId);
+        logger.info("AUDIT -> Admin '{}' successfully withdrew amount {} from user ID {}", adminUsername, amount, userId);
 
         return new ApiResponse<>(message, null);
     }
 
     @GetMapping("/balance/{userId}")
-    public ApiResponse<Double> checkBalance(@PathVariable Long userId) {
-        logger.info("Admin request to check balance for user ID: {}", userId);
+    public ApiResponse<Double> checkBalance(@PathVariable Long userId, Authentication authentication) {
+        String adminUsername = authentication.getName();
+
+        logger.info("AUDIT -> Admin '{}' requested balance for user ID {}", adminUsername, userId);
 
         Double balance = userService.checkBalance(userId);
 
-        logger.info("Balance fetched successfully for user ID: {}", userId);
+        logger.info("AUDIT -> Admin '{}' successfully fetched balance for user ID {}", adminUsername, userId);
 
         return new ApiResponse<>("Balance fetched successfully", balance);
     }
 
     @PostMapping("/transfer")
-    public ApiResponse<Void> transferMoney(@RequestBody TransferRequest request) {
-        logger.info("Admin request to transfer amount {} from user ID {} to user ID {}",
-                request.getAmount(), request.getSenderId(), request.getReceiverId());
+    public ApiResponse<Void> transferMoney(@RequestBody TransferRequest request, Authentication authentication) {
+        String adminUsername = authentication.getName();
+
+        logger.info("AUDIT -> Admin '{}' requested transfer of amount {} from user ID {} to user ID {}",
+                adminUsername, request.getAmount(), request.getSenderId(), request.getReceiverId());
 
         String message = userService.transferMoney(
                 request.getSenderId(),
@@ -100,19 +115,21 @@ public class AdminController {
                 request.getAmount()
         );
 
-        logger.info("Transfer successful. Amount {} transferred from user ID {} to user ID {}",
-                request.getAmount(), request.getSenderId(), request.getReceiverId());
+        logger.info("AUDIT -> Admin '{}' successfully transferred amount {} from user ID {} to user ID {}",
+                adminUsername, request.getAmount(), request.getSenderId(), request.getReceiverId());
 
         return new ApiResponse<>(message, null);
     }
 
     @GetMapping("/transactions")
-    public ApiResponse<List<Transaction>> getAllTransactions() {
-        logger.info("Admin request to fetch all transactions");
+    public ApiResponse<List<Transaction>> getAllTransactions(Authentication authentication) {
+        String adminUsername = authentication.getName();
+
+        logger.info("AUDIT -> Admin '{}' requested all transactions", adminUsername);
 
         List<Transaction> transactions = userService.getAllTransactions();
 
-        logger.info("Fetched all transactions successfully. Count: {}", transactions.size());
+        logger.info("AUDIT -> Admin '{}' fetched all transactions successfully. Count: {}", adminUsername, transactions.size());
 
         return new ApiResponse<>("Transactions fetched successfully", transactions);
     }
