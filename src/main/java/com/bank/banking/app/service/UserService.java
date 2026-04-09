@@ -32,6 +32,27 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // ==========================
+    // 🔐 DAY 17 HELPER METHODS
+    // ==========================
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    public List<TransactionResponseDto> getTransactionsByUserId(Long userId) {
+        return transactionRepository.findAll()
+                .stream()
+                .filter(t -> t.getSenderId().equals(userId) || t.getReceiverId().equals(userId))
+                .map(this::mapToTransactionResponseDto)
+                .toList();
+    }
+
+    // ==========================
+    // 👤 ADMIN + USER COMMON
+    // ==========================
+
     public UserResponseDto registerUser(User user) {
         if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
             throw new RuntimeException("Username cannot be empty");
@@ -66,6 +87,10 @@ public class UserService {
                 .map(this::mapToUserResponseDto)
                 .toList();
     }
+
+    // ==========================
+    // 💰 BANK OPERATIONS
+    // ==========================
 
     public String deposit(Long userId, Double amount) {
         if (amount == null || amount <= 0) {
@@ -158,12 +183,20 @@ public class UserService {
         return "Transfer successful";
     }
 
+    // ==========================
+    // 📊 ADMIN TRANSACTIONS
+    // ==========================
+
     public List<TransactionResponseDto> getAllTransactions() {
         return transactionRepository.findAll()
                 .stream()
                 .map(this::mapToTransactionResponseDto)
                 .toList();
     }
+
+    // ==========================
+    // 🗑 ADMIN DELETE
+    // ==========================
 
     public String deleteUser(Long userId) {
         User user = userRepository.findById(userId)
@@ -173,6 +206,10 @@ public class UserService {
 
         return "User deleted successfully";
     }
+
+    // ==========================
+    // 🔄 DTO MAPPERS
+    // ==========================
 
     private UserResponseDto mapToUserResponseDto(User user) {
         return new UserResponseDto(
