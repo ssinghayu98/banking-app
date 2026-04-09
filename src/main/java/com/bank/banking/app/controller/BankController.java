@@ -1,8 +1,8 @@
 package com.bank.banking.app.controller;
 
 import com.bank.banking.app.dto.AmountRequest;
+import com.bank.banking.app.dto.TransactionResponseDto;
 import com.bank.banking.app.dto.TransferRequest;
-import com.bank.banking.app.model.Transaction;
 import com.bank.banking.app.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -41,7 +41,7 @@ public class BankController {
     }
 
     @GetMapping("/transactions")
-    public List<Transaction> getAllTransactions() {
+    public List<TransactionResponseDto> getAllTransactions() {
         return userService.getAllTransactions();
     }
 }

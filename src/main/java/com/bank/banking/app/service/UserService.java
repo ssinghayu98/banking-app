@@ -1,5 +1,7 @@
 package com.bank.banking.app.service;
 
+import com.bank.banking.app.dto.TransactionResponseDto;
+import com.bank.banking.app.dto.UserResponseDto;
 import com.bank.banking.app.exception.InsufficientBalanceException;
 import com.bank.banking.app.exception.InvalidAmountException;
 import com.bank.banking.app.exception.InvalidTransferException;
@@ -30,7 +32,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User registerUser(User user) {
+    public UserResponseDto registerUser(User user) {
         if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
             throw new RuntimeException("Username cannot be empty");
         }
@@ -54,11 +56,15 @@ public class UserService {
 
         user.setRole(Role.USER);
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        return mapToUserResponseDto(savedUser);
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserResponseDto> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToUserResponseDto)
+                .toList();
     }
 
     public String deposit(Long userId, Double amount) {
@@ -152,8 +158,11 @@ public class UserService {
         return "Transfer successful";
     }
 
-    public List<Transaction> getAllTransactions() {
-        return transactionRepository.findAll();
+    public List<TransactionResponseDto> getAllTransactions() {
+        return transactionRepository.findAll()
+                .stream()
+                .map(this::mapToTransactionResponseDto)
+                .toList();
     }
 
     public String deleteUser(Long userId) {
@@ -163,5 +172,24 @@ public class UserService {
         userRepository.delete(user);
 
         return "User deleted successfully";
+    }
+
+    private UserResponseDto mapToUserResponseDto(User user) {
+        return new UserResponseDto(
+                user.getId(),
+                user.getUsername(),
+                user.getBalance(),
+                user.getRole()
+        );
+    }
+
+    private TransactionResponseDto mapToTransactionResponseDto(Transaction transaction) {
+        return new TransactionResponseDto(
+                transaction.getId(),
+                transaction.getSenderId(),
+                transaction.getReceiverId(),
+                transaction.getAmount(),
+                transaction.getType()
+        );
     }
 }

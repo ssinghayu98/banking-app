@@ -1,8 +1,9 @@
 package com.bank.banking.app.controller;
 
 import com.bank.banking.app.dto.ApiResponse;
+import com.bank.banking.app.dto.TransactionResponseDto;
 import com.bank.banking.app.dto.TransferRequest;
-import com.bank.banking.app.model.Transaction;
+import com.bank.banking.app.dto.UserResponseDto;
 import com.bank.banking.app.model.User;
 import com.bank.banking.app.service.UserService;
 import org.slf4j.Logger;
@@ -25,12 +26,12 @@ public class AdminController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<User> register(@RequestBody User user, Authentication authentication) {
+    public ApiResponse<UserResponseDto> register(@RequestBody User user, Authentication authentication) {
         String adminUsername = authentication.getName();
 
         logger.info("AUDIT -> Admin '{}' requested registration for username '{}'", adminUsername, user.getUsername());
 
-        User savedUser = userService.registerUser(user);
+        UserResponseDto savedUser = userService.registerUser(user);
 
         logger.info("AUDIT -> Admin '{}' successfully registered user '{}'", adminUsername, savedUser.getUsername());
 
@@ -38,12 +39,12 @@ public class AdminController {
     }
 
     @GetMapping("/users")
-    public ApiResponse<List<User>> getAllUsers(Authentication authentication) {
+    public ApiResponse<List<UserResponseDto>> getAllUsers(Authentication authentication) {
         String adminUsername = authentication.getName();
 
         logger.info("AUDIT -> Admin '{}' requested all users", adminUsername);
 
-        List<User> users = userService.getAllUsers();
+        List<UserResponseDto> users = userService.getAllUsers();
 
         logger.info("AUDIT -> Admin '{}' fetched all users successfully. Count: {}", adminUsername, users.size());
 
@@ -122,12 +123,12 @@ public class AdminController {
     }
 
     @GetMapping("/transactions")
-    public ApiResponse<List<Transaction>> getAllTransactions(Authentication authentication) {
+    public ApiResponse<List<TransactionResponseDto>> getAllTransactions(Authentication authentication) {
         String adminUsername = authentication.getName();
 
         logger.info("AUDIT -> Admin '{}' requested all transactions", adminUsername);
 
-        List<Transaction> transactions = userService.getAllTransactions();
+        List<TransactionResponseDto> transactions = userService.getAllTransactions();
 
         logger.info("AUDIT -> Admin '{}' fetched all transactions successfully. Count: {}", adminUsername, transactions.size());
 
