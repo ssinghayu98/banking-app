@@ -1,9 +1,18 @@
 package com.bank.banking.app.dto;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public class AdminTransferRequest {
 
+    @NotNull(message = "Sender ID is required")
     private Long senderId;
+
+    @NotNull(message = "Receiver ID is required")
     private Long receiverId;
+
+    @NotNull(message = "Amount is required")
+    @Positive(message = "Amount must be greater than 0")
     private Double amount;
 
     public AdminTransferRequest() {}
