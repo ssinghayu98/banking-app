@@ -21,15 +21,19 @@ public class BankController {
     private final UserService userService;
 
     @PostMapping("/deposit")
-    public String deposit(@Valid @RequestBody AmountRequest request, Authentication authentication) {
+    public ApiResponse<String> deposit(@Valid @RequestBody AmountRequest request, Authentication authentication) {
         User user = userService.getUserByUsername(authentication.getName());
-        return userService.deposit(user.getId(), request.getAmount());
+        String result = userService.deposit(user.getId(), request.getAmount());
+
+        return new ApiResponse<>("Deposit successful", result);
     }
 
     @PostMapping("/withdraw")
-    public String withdraw(@Valid @RequestBody AmountRequest request, Authentication authentication) {
+    public ApiResponse<String> withdraw(@Valid @RequestBody AmountRequest request, Authentication authentication) {
         User user = userService.getUserByUsername(authentication.getName());
-        return userService.withdraw(user.getId(), request.getAmount());
+        String result = userService.withdraw(user.getId(), request.getAmount());
+
+        return new ApiResponse<>("Withdrawal successful", result);
     }
 
     @GetMapping("/balance")
@@ -37,26 +41,27 @@ public class BankController {
         User user = userService.getUserByUsername(authentication.getName());
         Double balance = userService.checkBalance(user.getId());
 
-        return new ApiResponse<>(
-                "Balance fetched successfully",
-                balance
-        );
+        return new ApiResponse<>("Balance fetched successfully", balance);
     }
 
     @PostMapping("/transfer")
-    public String transfer(@Valid @RequestBody TransferRequest request, Authentication authentication) {
+    public ApiResponse<String> transfer(@Valid @RequestBody TransferRequest request, Authentication authentication) {
         User user = userService.getUserByUsername(authentication.getName());
-
-        return userService.transferMoney(
+        String result = userService.transferMoney(
                 user.getId(),
                 request.getReceiverId(),
                 request.getAmount()
         );
+
+        return new ApiResponse<>("Transfer successful", result);
     }
 
     @GetMapping("/transactions")
-    public List<TransactionResponseDto> getAllTransactions(Authentication authentication) {
+    public ApiResponse<List<TransactionResponseDto>> getAllTransactions(Authentication authentication) {
         User user = userService.getUserByUsername(authentication.getName());
-        return userService.getTransactionsByUserId(user.getId());
+        List<TransactionResponseDto> transactions =
+                userService.getTransactionsByUserId(user.getId());
+
+        return new ApiResponse<>("Transactions fetched successfully", transactions);
     }
 }
