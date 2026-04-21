@@ -1,35 +1,44 @@
 import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
+import Navbar from "../components/Navbar";
 
 function Dashboard() {
+
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState("");
   const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
+  const [transactions, setTransactions] = useState([]);
+  const [showTransactions, setShowTransactions] = useState(false);
 
   const token = localStorage.getItem("token");
 
-  // 🔄 Fetch Balance
-  const fetchBalance = async () => {
+  // 🔄 Fetch Data
+  const fetchData = async () => {
     try {
       const decoded = jwtDecode(token);
       const user = decoded.sub;
       setUsername(user);
 
-      const res = await fetch(
-        `http://localhost:8080/user/balance/${user}`
-      );
+      // Balance
+      const res1 = await fetch(`http://localhost:8080/user/balance/${user}`);
+      const data1 = await res1.json();
+      setBalance(data1.balance);
 
-      const data = await res.json();
-      setBalance(data.balance);
-    } catch (error) {
-      console.error(error);
-      setMessage("❌ Failed to load balance");
+      // Transactions
+      const res2 = await fetch(`http://localhost:8080/user/transactions/${user}`);
+      const data2 = await res2.json();
+
+      setTransactions(Array.isArray(data2) ? data2 : []);
+
+    } catch (err) {
+      console.error(err);
+      setMessage("❌ Error loading data");
     }
   };
 
   useEffect(() => {
-    fetchBalance();
+    fetchData();
   }, []);
 
   // 💰 Deposit
@@ -43,15 +52,13 @@ function Dashboard() {
         { method: "POST" }
       );
 
-      if (!res.ok) {
-        throw new Error();
-      }
+      if (!res.ok) throw new Error();
 
       setMessage("✅ Deposit successful");
       setAmount("");
-      fetchBalance();
+      fetchData();
 
-    } catch (error) {
+    } catch {
       setMessage("❌ Deposit failed");
     }
   };
@@ -67,23 +74,15 @@ function Dashboard() {
         { method: "POST" }
       );
 
-      if (!res.ok) {
-        throw new Error("Insufficient balance");
-      }
+      if (!res.ok) throw new Error();
 
       setMessage("✅ Withdraw successful");
       setAmount("");
-      fetchBalance();
+      fetchData();
 
-    } catch (error) {
+    } catch {
       setMessage("❌ Insufficient balance");
     }
-  };
-
-  // 🔄 Refresh
-  const handleRefresh = () => {
-    fetchBalance();
-    setMessage("");
   };
 
   // 🚪 Logout
@@ -93,42 +92,66 @@ function Dashboard() {
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2>🏦 Banking Dashboard</h2>
+    <>
+      <Navbar />
 
-        <p>Welcome, <b>{username}</b></p>
+      <div style={styles.container}>
+        <div style={styles.card}>
 
-        <h1 style={styles.balance}>₹{balance}</h1>
+          <h2>🏦 Banking Dashboard</h2>
 
-        <input
-          type="number"
-          placeholder="Enter amount"
-          style={styles.input}
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
+          <p>Welcome, <b>{username}</b></p>
 
-        <button style={styles.deposit} onClick={handleDeposit}>
-          💰 Deposit
-        </button>
+          <h1 style={styles.balance}>₹{balance}</h1>
 
-        <button style={styles.withdraw} onClick={handleWithdraw}>
-          💸 Withdraw
-        </button>
+          <input
+            type="number"
+            placeholder="Enter amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            style={styles.input}
+          />
 
-        <button style={styles.refresh} onClick={handleRefresh}>
-          🔄 Refresh Balance
-        </button>
+          <button style={styles.deposit} onClick={handleDeposit}>
+            💰 Deposit
+          </button>
 
-        <button style={styles.logout} onClick={logout}>
-          🚪 Logout
-        </button>
+          <button style={styles.withdraw} onClick={handleWithdraw}>
+            💸 Withdraw
+          </button>
 
-        {/* ✅ Message */}
-        {message && <p style={styles.message}>{message}</p>}
+          <button style={styles.refresh} onClick={fetchData}>
+            🔄 Refresh Balance
+          </button>
+
+          <button style={styles.logout} onClick={logout}>
+            🚪 Logout
+          </button>
+
+          {/* Message */}
+          {message && <p style={styles.message}>{message}</p>}
+
+          {/* 🔘 Toggle Button */}
+          <button
+            style={styles.transactionsBtn}
+            onClick={() => setShowTransactions(!showTransactions)}
+          >
+            📊 {showTransactions ? "Hide Transactions" : "Show Transactions"}
+          </button>
+
+          {/* 📊 Transactions List */}
+          {showTransactions && (
+            <ul style={styles.list}>
+              {Array.isArray(transactions) &&
+                transactions.map((t, i) => (
+                  <li key={i}>{t}</li>
+                ))}
+            </ul>
+          )}
+
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -143,10 +166,10 @@ const styles = {
   },
   card: {
     background: "white",
-    padding: "40px",
+    padding: "30px",
     borderRadius: "15px",
+    width: "350px",
     textAlign: "center",
-    width: "320px",
     boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
   },
   balance: {
@@ -156,8 +179,8 @@ const styles = {
   input: {
     width: "100%",
     padding: "10px",
-    borderRadius: "8px",
     marginTop: "10px",
+    borderRadius: "8px",
     border: "1px solid #ccc",
   },
   deposit: {
@@ -200,9 +223,23 @@ const styles = {
     borderRadius: "8px",
     cursor: "pointer",
   },
-  message: {
+  transactionsBtn: {
+    width: "100%",
     marginTop: "15px",
+    padding: "10px",
+    background: "#6c5ce7",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+  },
+  message: {
+    marginTop: "12px",
     fontWeight: "bold",
+  },
+  list: {
+    textAlign: "left",
+    marginTop: "10px",
   },
 };
 
