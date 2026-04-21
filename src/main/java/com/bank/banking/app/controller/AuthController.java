@@ -1,10 +1,9 @@
 package com.bank.banking.app.controller;
 
+import com.bank.banking.app.dto.ApiResponse;
 import com.bank.banking.app.dto.LoginRequest;
 import com.bank.banking.app.service.AuthService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -17,27 +16,16 @@ public class AuthController {
         this.authService = authService;
     }
 
-    // 🔐 LOGIN
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody LoginRequest request) {
+    public ApiResponse<String> login(@RequestBody LoginRequest request) {
+
+        System.out.println("LOGIN HIT"); // 🔥 debug
 
         String token = authService.login(
                 request.getUsername(),
                 request.getPassword()
         );
 
-        return Map.of("token", token);
-    }
-
-    // 📝 REGISTER
-    @PostMapping("/register")
-    public String register(@RequestBody LoginRequest request) {
-
-        authService.register(
-                request.getUsername(),
-                request.getPassword()
-        );
-
-        return "User registered successfully";
+        return new ApiResponse<>("Login successful", token);
     }
 }

@@ -1,84 +1,105 @@
 package com.bank.banking.app.service;
 
+import com.bank.banking.app.model.Transaction;
 import com.bank.banking.app.model.User;
+import com.bank.banking.app.repository.TransactionRepository;
 import com.bank.banking.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
-    // 🧠 In-memory transaction storage (temporary)
-    private final Map<String, List<String>> transactions = new HashMap<>();
-
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository,
+                       TransactionRepository transactionRepository) {
         this.userRepository = userRepository;
+        this.transactionRepository = transactionRepository;
     }
 
-    // 🔍 Get user
-    public User getUserByUsername(String username) {
+    // ===============================
+    // ✅ DEPOSIT
+    // ===============================
+    public String deposit(String username, Double amount) {
+
         User user = userRepository.findByUsername(username);
 
         if (user == null) {
             throw new RuntimeException("User not found");
         }
 
-        if (user.getBalance() == null) {
-            user.setBalance(0.0);
+        if (amount <= 0) {
+            throw new RuntimeException("Invalid amount");
         }
 
-        return user;
-    }
-
-    // 💰 Deposit
-    public String depositByUsername(String username, Double amount) {
-
-        User user = getUserByUsername(username);
-
-        if (amount == null || amount <= 0) {
-            throw new RuntimeException("Invalid deposit amount");
-        }
-
+        // ✅ update balance
         user.setBalance(user.getBalance() + amount);
         userRepository.save(user);
 
-        // 📊 Save transaction
-        transactions
-                .computeIfAbsent(username, k -> new ArrayList<>())
-                .add("Deposited ₹" + amount);
+        // ✅ save transaction (FIXED)
+        Transaction tx = new Transaction(user, "DEPOSIT", amount);
+        tx.setTimestamp(LocalDateTime.now());
+
+        transactionRepository.save(tx);
 
         return "Deposit successful";
     }
 
-    // 💸 Withdraw
-    public String withdrawByUsername(String username, Double amount) {
+    // ===============================
+    // ✅ WITHDRAW
+    // ===============================
+    public String withdraw(String username, Double amount) {
 
-        User user = getUserByUsername(username);
+        User user = userRepository.findByUsername(username);
 
-        if (amount == null || amount <= 0) {
-            throw new RuntimeException("Invalid withdraw amount");
+        if (user == null) {
+            throw new RuntimeException("User not found");
         }
 
-        if (user.getBalance() - amount < 0) {
+        if (amount <= 0) {
+            throw new RuntimeException("Invalid amount");
+        }
+
+        if (user.getBalance() < amount) {
             throw new RuntimeException("Insufficient balance");
         }
 
+        // ✅ update balance
         user.setBalance(user.getBalance() - amount);
         userRepository.save(user);
 
-        // 📊 Save transaction
-        transactions
-                .computeIfAbsent(username, k -> new ArrayList<>())
-                .add("Withdrew ₹" + amount);
+        // ✅ save transaction (FIXED)
+        Transaction tx = new Transaction(user, "WITHDRAW", amount);
+        tx.setTimestamp(LocalDateTime.now());
+
+        transactionRepository.save(tx);
 
         return "Withdraw successful";
     }
 
-    // 📊 Get transactions
-    public List<String> getTransactions(String username) {
-        return transactions.getOrDefault(username, new ArrayList<>());
+    // ===============================
+    // ✅ GET BALANCE
+    // ===============================
+    public Double getBalance(String username) {
+
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        return user.getBalance();
+    }
+
+    // ===============================
+    // ✅ GET TRANSACTIONS
+    // ===============================
+    public List<Transaction> getTransactions(String username) {
+
+        return transactionRepository.findByUserUsername(username);
     }
 }

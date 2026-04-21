@@ -1,51 +1,32 @@
 package com.bank.banking.app.service;
 
-import com.bank.banking.app.model.User;
-import com.bank.banking.app.repository.UserRepository;
-import com.bank.banking.app.util.JwtUtil;
+import com.bank.banking.app.security.JwtUtil;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
-    public AuthService(UserRepository userRepository, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
+    public AuthService(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+        this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
     }
 
-    // 🔐 LOGIN
+    // 🔐 LOGIN METHOD
     public String login(String username, String password) {
 
-        User user = userRepository.findByUsername(username);
+        System.out.println("AUTH SERVICE CALLED: " + username);
 
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
+        // ✅ Spring Security handles password check
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+        );
 
-        if (!user.getPassword().equals(password)) {
-            throw new RuntimeException("Invalid password");
-        }
-
+        // ✅ Generate JWT token
         return jwtUtil.generateToken(username);
-    }
-
-    // 📝 REGISTER
-    public void register(String username, String password) {
-
-        User existing = userRepository.findByUsername(username);
-
-        if (existing != null) {
-            throw new RuntimeException("User already exists");
-        }
-
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(password);
-        user.setBalance(0.0);
-
-        userRepository.save(user);
     }
 }

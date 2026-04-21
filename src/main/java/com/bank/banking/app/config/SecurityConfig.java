@@ -21,19 +21,18 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(auth -> auth
-
-                        // ✅ Public endpoints
                         .requestMatchers("/auth/**").permitAll()
-
-                        // 🔐 Protected endpoints
                         .requestMatchers("/user/**").authenticated()
-
-                        // everything else
-                        .anyRequest().permitAll()
+                        .requestMatchers("/admin/**").authenticated()
+                        .anyRequest().authenticated()
                 )
 
-                // 🔐 Add JWT filter
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
+
+                // 🔥 attach JWT filter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

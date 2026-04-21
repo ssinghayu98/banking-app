@@ -14,17 +14,19 @@ public class AdminController {
         this.userService = userService;
     }
 
+    // ✅ DEPOSIT
     @PostMapping("/deposit")
     public String deposit(@RequestParam String username,
                           @RequestParam Double amount) {
 
-        return userService.depositByUsername(username, amount);
+        return userService.deposit(username, amount);
     }
 
+    // ✅ WITHDRAW
     @PostMapping("/withdraw")
     public String withdraw(@RequestParam String username,
                            @RequestParam Double amount) {
 
-        return userService.withdrawByUsername(username, amount);
+        return userService.withdraw(username, amount);
     }
 }
