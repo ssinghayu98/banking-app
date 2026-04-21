@@ -17,7 +17,7 @@ public class BankController {
         this.userService = userService;
     }
 
-    // ✅ Get balance using username
+    // ✅ Get balance
     @GetMapping("/balance/{username}")
     public Map<String, Double> getBalance(@PathVariable String username) {
         User user = userService.getUserByUsername(username);
@@ -26,13 +26,17 @@ public class BankController {
 
     // 💰 Deposit
     @PostMapping("/deposit")
-    public String deposit(@RequestParam Long userId, @RequestParam Double amount) {
-        return userService.deposit(userId, amount);
+    public String deposit(@RequestParam String username,
+                          @RequestParam Double amount) {
+
+        return userService.depositByUsername(username, amount);
     }
 
     // 💸 Withdraw
     @PostMapping("/withdraw")
-    public String withdraw(@RequestParam Long userId, @RequestParam Double amount) {
-        return userService.withdraw(userId, amount);
+    public String withdraw(@RequestParam String username,
+                           @RequestParam Double amount) {
+
+        return userService.withdrawByUsername(username, amount);
     }
 }

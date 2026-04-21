@@ -4,88 +4,81 @@ import com.bank.banking.app.model.User;
 import com.bank.banking.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
 
-    // Constructor Injection
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    // ✅ Get user by username (FIXED - REAL DB FETCH)
+    // 🔍 Get user
     public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
+        User user = userRepository.findByUsername(username);
 
-    // ✅ Deposit (basic version)
-    public String deposit(Long userId, Double amount) {
-        Optional<User> optionalUser = userRepository.findById(userId);
-
-        if (optionalUser.isEmpty()) {
-            return "User not found";
+        if (user == null) {
+            throw new RuntimeException("User not found");
         }
 
-        User user = optionalUser.get();
-        user.setBalance(user.getBalance() + amount);
+        // ✅ Ensure balance is never null
+        if (user.getBalance() == null) {
+            user.setBalance(0.0);
+        }
 
+        return user;
+    }
+
+    // 💰 Deposit
+    public String depositByUsername(String username, Double amount) {
+
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        // 🚨 Validate amount
+        if (amount == null || amount <= 0) {
+            throw new RuntimeException("Invalid deposit amount");
+        }
+
+        if (user.getBalance() == null) {
+            user.setBalance(0.0);
+        }
+
+        user.setBalance(user.getBalance() + amount);
         userRepository.save(user);
 
-        return "Amount deposited successfully";
+        return "Deposit successful";
     }
 
-    // ✅ Withdraw (basic version)
-    public String withdraw(Long userId, Double amount) {
-        Optional<User> optionalUser = userRepository.findById(userId);
+    // 💸 Withdraw
+    public String withdrawByUsername(String username, Double amount) {
 
-        if (optionalUser.isEmpty()) {
-            return "User not found";
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
         }
 
-        User user = optionalUser.get();
+        // 🚨 Validate amount
+        if (amount == null || amount <= 0) {
+            throw new RuntimeException("Invalid withdraw amount");
+        }
 
-        if (user.getBalance() < amount) {
-            return "Insufficient balance";
+        if (user.getBalance() == null) {
+            user.setBalance(0.0);
+        }
+
+        // 🚨 STRICT RULE: no negative balance
+        if (user.getBalance() - amount < 0) {
+            throw new RuntimeException("Insufficient balance");
         }
 
         user.setBalance(user.getBalance() - amount);
-
         userRepository.save(user);
 
-        return "Amount withdrawn successfully";
-    }
-
-    // ✅ Transfer (basic version)
-    public String transferMoney(Long senderId, Long receiverId, Double amount) {
-
-        Optional<User> senderOpt = userRepository.findById(senderId);
-        Optional<User> receiverOpt = userRepository.findById(receiverId);
-
-        if (senderOpt.isEmpty() || receiverOpt.isEmpty()) {
-            return "User not found";
-        }
-
-        User sender = senderOpt.get();
-        User receiver = receiverOpt.get();
-
-        if (sender.getBalance() < amount) {
-            return "Insufficient balance";
-        }
-
-        sender.setBalance(sender.getBalance() - amount);
-        receiver.setBalance(receiver.getBalance() + amount);
-
-        userRepository.save(sender);
-        userRepository.save(receiver);
-
-        return "Money transferred successfully";
-    }
-
-    // ✅ Dummy transactions (we will upgrade later)
-    public List<String> getTransactionsByUserId(Long userId) {
-        return Arrays.asList("TXN1", "TXN2");
+        return "Withdraw successful";
     }
 }

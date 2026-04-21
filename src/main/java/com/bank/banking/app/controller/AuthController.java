@@ -8,7 +8,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*") // 🔥 VERY IMPORTANT for React
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
@@ -17,7 +17,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    // 🔐 LOGIN API
+    // 🔐 LOGIN
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody LoginRequest request) {
 
@@ -26,7 +26,18 @@ public class AuthController {
                 request.getPassword()
         );
 
-        // ✅ RETURN JSON (NOT STRING)
         return Map.of("token", token);
+    }
+
+    // 📝 REGISTER
+    @PostMapping("/register")
+    public String register(@RequestBody LoginRequest request) {
+
+        authService.register(
+                request.getUsername(),
+                request.getPassword()
+        );
+
+        return "User registered successfully";
     }
 }

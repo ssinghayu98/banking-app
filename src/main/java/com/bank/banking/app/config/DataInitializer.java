@@ -19,21 +19,17 @@ public class DataInitializer implements CommandLineRunner {
 
         String adminUsername = "admin2";
 
-        // ✅ FIXED: no isEmpty()
+        // ✅ Check if user already exists
         if (userRepository.findByUsername(adminUsername) == null) {
 
             User admin = new User();
             admin.setUsername(adminUsername);
-
-            // ⚠️ plain text (matches your current login logic)
-            admin.setPassword("12345");
-
+            admin.setPassword("12345"); // plain text for now
             admin.setBalance(1000.0);
-            admin.setRole("ADMIN");
 
             userRepository.save(admin);
 
-            System.out.println("✅ Admin created");
+            System.out.println("✅ Admin user created");
         } else {
             System.out.println("✅ Admin already exists");
         }

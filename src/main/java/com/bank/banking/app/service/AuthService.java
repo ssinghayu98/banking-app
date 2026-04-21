@@ -16,23 +16,36 @@ public class AuthService {
         this.jwtUtil = jwtUtil;
     }
 
+    // 🔐 LOGIN
     public String login(String username, String password) {
 
-        // 🔍 Find user from DB
         User user = userRepository.findByUsername(username);
 
         if (user == null) {
             throw new RuntimeException("User not found");
         }
 
-        // 🔥 IMPORTANT: simple password check (no encryption for now)
         if (!user.getPassword().equals(password)) {
             throw new RuntimeException("Invalid password");
         }
 
-        // 🔐 Generate JWT token
-        String token = jwtUtil.generateToken(username);
+        return jwtUtil.generateToken(username);
+    }
 
-        return token; // ✅ MUST RETURN TOKEN
+    // 📝 REGISTER
+    public void register(String username, String password) {
+
+        User existing = userRepository.findByUsername(username);
+
+        if (existing != null) {
+            throw new RuntimeException("User already exists");
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(password);
+        user.setBalance(0.0);
+
+        userRepository.save(user);
     }
 }

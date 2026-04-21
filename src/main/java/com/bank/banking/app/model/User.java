@@ -10,28 +10,44 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String username;
+
     private String password;
-    private Double balance = 0.0;
-    private String role = "USER";
 
-    // GETTERS & SETTERS
+    private Double balance;
 
-    public Long getId() { return id; }
+    // ✅ Getters & Setters
 
-    public String getUsername() { return username; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setUsername(String username) { this.username = username; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getPassword() { return password; }
+    public String getUsername() {
+        return username;
+    }
 
-    public void setPassword(String password) { this.password = password; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public Double getBalance() { return balance; }
+    public String getPassword() {
+        return password;
+    }
 
-    public void setBalance(Double balance) { this.balance = balance; }
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-    public String getRole() { return role; }
+    public Double getBalance() {
+        return balance;
+    }
 
-    public void setRole(String role) { this.role = role; }
+    public void setBalance(Double balance) {
+        this.balance = balance;
+    }
 }
