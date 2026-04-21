@@ -1,153 +1,118 @@
 import { useState } from "react";
 
 function Login() {
-  const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
+  const handleLogin = async () => {
     try {
-      const res = await fetch("http://localhost:8080/auth/login", {
+      const response = await fetch("http://localhost:8080/auth/login", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password.trim(),
+        }),
       });
 
-      const text = await res.text();
+      const data = await response.json();
+      console.log("LOGIN RESPONSE:", data);
 
-      if (text === "SUCCESS") {
-        localStorage.setItem("username", username);
+      // ✅ Since backend is fixed, token will be here
+      if (!data.token) {
+        setMessage("❌ Invalid Username or Password");
+        return;
+      }
+
+      // 🔐 Save JWT
+      localStorage.setItem("token", data.token);
+
+      // ✅ Success message
+      setMessage("✅ Login Successful!");
+
+      // 🔁 Redirect to dashboard
+      setTimeout(() => {
         window.location.href = "/dashboard";
-      } else {
-        setError("Invalid credentials");
-      }
-    } catch {
-      setError("Server error");
-    }
-  };
+      }, 1000);
 
-  const handleSignup = async (e) => {
-    e.preventDefault();
-
-    try {
-      const res = await fetch("http://localhost:8080/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ username, password })
-      });
-
-      const text = await res.text();
-
-      if (text === "REGISTERED") {
-        setIsLogin(true);
-        setError("");
-        alert("Signup successful");
-      } else {
-        setError("Signup failed");
-      }
-    } catch {
-      setError("Server error");
+    } catch (error) {
+      console.error("LOGIN ERROR:", error);
+      setMessage("❌ Server error");
     }
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2>{isLogin ? "Login" : "Sign Up"}</h2>
+        <h2>🏦 Banking App Login</h2>
 
-        <form onSubmit={isLogin ? handleLogin : handleSignup}>
-          <input
-            style={styles.input}
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
+        <input
+          type="text"
+          placeholder="Username"
+          style={styles.input}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
 
-          <input
-            style={styles.input}
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        <input
+          type="password"
+          placeholder="Password"
+          style={styles.input}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-          <button style={styles.button}>
-            {isLogin ? "Login" : "Sign Up"}
-          </button>
-        </form>
+        <button style={styles.button} onClick={handleLogin}>
+          Login
+        </button>
 
-        {error && <p style={styles.error}>{error}</p>}
-
-        <p style={styles.toggle}>
-          {isLogin ? "Don't have an account?" : "Already have an account?"}
-          <span
-            style={styles.link}
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError("");
-            }}
-          >
-            {isLogin ? " Sign Up" : " Login"}
-          </span>
-        </p>
+        <p style={styles.message}>{message}</p>
       </div>
     </div>
   );
 }
 
+// 🎨 STYLES
 const styles = {
   container: {
     height: "100vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "linear-gradient(to right, #6a11cb, #2575fc)"
+    background: "linear-gradient(to right, #4facfe, #00f2fe)",
   },
   card: {
-    background: "#fff",
-    padding: "30px",
-    borderRadius: "10px",
+    background: "white",
+    padding: "40px",
+    borderRadius: "15px",
+    textAlign: "center",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
     width: "300px",
-    textAlign: "center"
   },
   input: {
     width: "100%",
     padding: "10px",
     margin: "10px 0",
-    borderRadius: "5px",
-    border: "1px solid #ccc"
+    borderRadius: "8px",
+    border: "1px solid #ccc",
   },
   button: {
     width: "100%",
     padding: "10px",
-    background: "#2575fc",
-    color: "#fff",
+    background: "#4facfe",
     border: "none",
-    borderRadius: "5px",
-    cursor: "pointer"
-  },
-  error: {
-    color: "red",
-    marginTop: "10px"
-  },
-  toggle: {
-    marginTop: "15px"
-  },
-  link: {
-    color: "#2575fc",
+    color: "white",
+    borderRadius: "8px",
     cursor: "pointer",
-    fontWeight: "bold"
-  }
+    fontWeight: "bold",
+  },
+  message: {
+    marginTop: "15px",
+    fontWeight: "bold",
+  },
 };
 
 export default Login;

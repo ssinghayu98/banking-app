@@ -1,26 +1,28 @@
 import { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 
 function Dashboard() {
   const [balance, setBalance] = useState(null);
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  // 🔥 CHANGE THIS USERNAME IF NEEDED
-  const username = "admin2"; // ⚠️ must match DB exactly
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
 
   const fetchBalance = async () => {
     try {
-      setLoading(true);
-
       const token = localStorage.getItem("token");
 
+      // 🔐 Decode JWT
+      const decoded = jwtDecode(token);
+      const user = decoded.sub;
+
+      setUsername(user);
+
       const response = await fetch(
-        `http://localhost:8080/user/balance/${username}`,
+        `http://localhost:8080/user/balance/${user}`,
         {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // JWT
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -31,51 +33,65 @@ function Dashboard() {
 
       const data = await response.json();
 
-      setBalance(data.balance);
-      setMessage("✅ Data loaded successfully");
-    } catch (error) {
-      setMessage("❌ Something went wrong");
-    } finally {
-      setLoading(false);
+      setBalance(Number(data.balance));
+      setError("");
+    } catch (err) {
+      setError("❌ Failed to load data");
+      console.error(err);
     }
   };
 
   useEffect(() => {
-    fetchBalance();
+    const token = localStorage.getItem("token");
+
+    // 🔒 Protect route
+    if (!token) {
+      window.location.href = "/";
+    } else {
+      fetchBalance();
+    }
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/";
+  };
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2>🏦 Dashboard</h2>
+        <h2>🏦 Banking Dashboard</h2>
 
-        {loading ? (
-          <p>Loading...</p>
+        <p style={styles.welcome}>Welcome, {username}</p>
+
+        {error && <p style={styles.error}>{error}</p>}
+
+        {balance !== null ? (
+          <h1 style={styles.balance}>₹{balance}</h1>
         ) : (
-          <>
-            <h3 style={styles.balance}>
-              {balance !== null ? `₹${balance}` : "No Data"}
-            </h3>
-
-            <p>{message}</p>
-
-            <button style={styles.button} onClick={fetchBalance}>
-              Refresh Balance
-            </button>
-          </>
+          <p>Loading...</p>
         )}
+
+        <button style={styles.button} onClick={fetchBalance}>
+          🔄 Refresh Balance
+        </button>
+
+        <button style={styles.logout} onClick={handleLogout}>
+          🚪 Logout
+        </button>
       </div>
     </div>
   );
 }
 
+// 🎨 STYLES
 const styles = {
   container: {
     height: "100vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "linear-gradient(to right, #4facfe, #00f2fe)",
+    background: "linear-gradient(to right, #667eea, #764ba2)",
   },
   card: {
     background: "white",
@@ -83,19 +99,41 @@ const styles = {
     borderRadius: "15px",
     textAlign: "center",
     boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+    width: "300px",
+  },
+  welcome: {
+    marginBottom: "10px",
+    fontWeight: "bold",
   },
   balance: {
-    fontSize: "28px",
+    fontSize: "32px",
     margin: "20px 0",
   },
   button: {
-    padding: "10px 20px",
-    border: "none",
-    background: "#4facfe",
+    width: "100%",
+    padding: "10px",
+    marginTop: "10px",
+    background: "#667eea",
     color: "white",
+    border: "none",
     borderRadius: "8px",
     cursor: "pointer",
     fontWeight: "bold",
+  },
+  logout: {
+    width: "100%",
+    padding: "10px",
+    marginTop: "10px",
+    background: "red",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontWeight: "bold",
+  },
+  error: {
+    color: "red",
+    marginTop: "10px",
   },
 };
 
