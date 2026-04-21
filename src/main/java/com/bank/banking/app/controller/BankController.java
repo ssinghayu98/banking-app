@@ -2,45 +2,37 @@ package com.bank.banking.app.controller;
 
 import com.bank.banking.app.model.User;
 import com.bank.banking.app.service.UserService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "*") // allow React frontend
+@CrossOrigin(origins = "*")
 public class BankController {
 
     private final UserService userService;
 
-    // Constructor Injection
     public BankController(UserService userService) {
         this.userService = userService;
     }
 
-    // ✅ Get User Profile
-    @GetMapping("/profile")
-    public ResponseEntity<?> getUser(@RequestParam String username) {
+    // ✅ Get balance using username
+    @GetMapping("/balance/{username}")
+    public Map<String, Double> getBalance(@PathVariable String username) {
         User user = userService.getUserByUsername(username);
-
-        if (user == null) {
-            return ResponseEntity.badRequest().body("User not found");
-        }
-
-        return ResponseEntity.ok(user);
+        return Map.of("balance", user.getBalance());
     }
 
-    // ✅ Get Balance (FIXED)
-    @GetMapping("/balance/{username}")
-    public ResponseEntity<?> getBalance(@PathVariable String username) {
+    // 💰 Deposit
+    @PostMapping("/deposit")
+    public String deposit(@RequestParam Long userId, @RequestParam Double amount) {
+        return userService.deposit(userId, amount);
+    }
 
-        User user = userService.getUserByUsername(username);
-
-        if (user == null) {
-            return ResponseEntity.badRequest().body("User not found");
-        }
-
-        return ResponseEntity.ok(Map.of("balance", user.getBalance()));
+    // 💸 Withdraw
+    @PostMapping("/withdraw")
+    public String withdraw(@RequestParam Long userId, @RequestParam Double amount) {
+        return userService.withdraw(userId, amount);
     }
 }
