@@ -1,127 +1,121 @@
+import axios from "axios";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const handleLogin = async () => {
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await axios.post(
+        "http://localhost:8080/auth/login",
+        {
+          username: username,
+          password: password
         },
-        body: JSON.stringify({
-          username: username.trim(),
-          password: password.trim(),
-        }),
-      });
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
-      const data = await response.json();
-      console.log("LOGIN RESPONSE:", data);
+      // ✅ Save JWT token
+      const token = response.data.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("username", username);
 
-      if (!data.token) {
-        setMessage("❌ Invalid Username or Password");
-        return;
+      // ✅ Redirect to dashboard
+      navigate("/dashboard");
+
+    } catch (err) {
+      console.error("LOGIN ERROR:", err);
+
+      if (err.response) {
+        setError(err.response.data.message || "Login failed");
+      } else {
+        setError("Server not reachable");
       }
-
-      localStorage.setItem("token", data.token);
-
-      setMessage("✅ Login Successful!");
-
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1000);
-
-    } catch (error) {
-      console.error(error);
-      setMessage("❌ Server error");
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2>🏦 Banking App Login</h2>
+    <div
+      style={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "linear-gradient(to right, #5f9cff, #6a5acd)"
+      }}
+    >
+      <form
+        onSubmit={handleLogin}
+        style={{
+          background: "#fff",
+          padding: "30px",
+          borderRadius: "10px",
+          width: "300px",
+          boxShadow: "0 5px 15px rgba(0,0,0,0.2)"
+        }}
+      >
+        <h2 style={{ textAlign: "center" }}>🏦 Banking App Login</h2>
 
         <input
           type="text"
           placeholder="Username"
-          style={styles.input}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          required
+          style={{
+            width: "100%",
+            padding: "10px",
+            margin: "10px 0"
+          }}
         />
 
         <input
           type="password"
           placeholder="Password"
-          style={styles.input}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
+          style={{
+            width: "100%",
+            padding: "10px",
+            margin: "10px 0"
+          }}
         />
 
-        <button style={styles.button} onClick={handleLogin}>
+        <button
+          type="submit"
+          style={{
+            width: "100%",
+            padding: "10px",
+            background: "#1976d2",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer"
+          }}
+        >
           Login
         </button>
 
-        <p style={styles.message}>{message}</p>
-
-        {/* 🔥 SIGNUP LINK */}
-        <p
-          style={styles.link}
-          onClick={() => (window.location.href = "/signup")}
-        >
-          Don’t have an account? Sign Up
-        </p>
-      </div>
+        {error && (
+          <p style={{ color: "red", marginTop: "10px", textAlign: "center" }}>
+            ❌ {error}
+          </p>
+        )}
+      </form>
     </div>
   );
 }
-
-// 🎨 Styles
-const styles = {
-  container: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "linear-gradient(to right, #4facfe, #00f2fe)",
-  },
-  card: {
-    background: "white",
-    padding: "40px",
-    borderRadius: "15px",
-    textAlign: "center",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-    width: "300px",
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    margin: "10px 0",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
-  },
-  button: {
-    width: "100%",
-    padding: "10px",
-    background: "#4facfe",
-    border: "none",
-    color: "white",
-    borderRadius: "8px",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-  message: {
-    marginTop: "10px",
-  },
-  link: {
-    marginTop: "15px",
-    color: "#4facfe",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
-};
 
 export default Login;

@@ -1,244 +1,215 @@
-import { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
-import Navbar from "../components/Navbar";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-function Dashboard() {
-
+const Dashboard = () => {
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState("");
-  const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
   const [transactions, setTransactions] = useState([]);
-  const [showTransactions, setShowTransactions] = useState(false);
 
+  const username = localStorage.getItem("username");
   const token = localStorage.getItem("token");
 
-  // 🔄 Fetch Data
-  const fetchData = async () => {
+  const navigate = useNavigate();
+
+  // ===============================
+  // ✅ LOAD DATA
+  // ===============================
+  useEffect(() => {
+    fetchBalance();
+    fetchTransactions();
+  }, []);
+
+  const fetchBalance = async () => {
     try {
-      const decoded = jwtDecode(token);
-      const user = decoded.sub;
-      setUsername(user);
-
-      // Balance
-      const res1 = await fetch(`http://localhost:8080/user/balance/${user}`);
-      const data1 = await res1.json();
-      setBalance(data1.balance);
-
-      // Transactions
-      const res2 = await fetch(`http://localhost:8080/user/transactions/${user}`);
-      const data2 = await res2.json();
-
-      setTransactions(Array.isArray(data2) ? data2 : []);
-
+      const res = await axios.get(
+        "http://localhost:8080/user/balance",
+        {
+          params: { username },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setBalance(res.data.data || res.data);
     } catch (err) {
       console.error(err);
-      setMessage("❌ Error loading data");
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  // 💰 Deposit
-  const handleDeposit = async () => {
+  const fetchTransactions = async () => {
     try {
-      const decoded = jwtDecode(token);
-      const user = decoded.sub;
-
-      const res = await fetch(
-        `http://localhost:8080/user/deposit?username=${user}&amount=${amount}`,
-        { method: "POST" }
+      const res = await axios.get(
+        "http://localhost:8080/user/transactions",
+        {
+          params: { username },
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
+      setTransactions(res.data.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-      if (!res.ok) throw new Error();
-
+  // ===============================
+  // ✅ DEPOSIT
+  // ===============================
+  const deposit = async () => {
+    try {
+      await axios.post(
+        "http://localhost:8080/user/deposit",
+        null,
+        {
+          params: { username, amount },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setMessage("✅ Deposit successful");
-      setAmount("");
-      fetchData();
-
+      fetchBalance();
+      fetchTransactions();
     } catch {
       setMessage("❌ Deposit failed");
     }
   };
 
-  // 💸 Withdraw
-  const handleWithdraw = async () => {
+  // ===============================
+  // ✅ WITHDRAW
+  // ===============================
+  const withdraw = async () => {
     try {
-      const decoded = jwtDecode(token);
-      const user = decoded.sub;
-
-      const res = await fetch(
-        `http://localhost:8080/user/withdraw?username=${user}&amount=${amount}`,
-        { method: "POST" }
+      await axios.post(
+        "http://localhost:8080/user/withdraw",
+        null,
+        {
+          params: { username, amount },
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-
-      if (!res.ok) throw new Error();
-
       setMessage("✅ Withdraw successful");
-      setAmount("");
-      fetchData();
-
+      fetchBalance();
+      fetchTransactions();
     } catch {
-      setMessage("❌ Insufficient balance");
+      setMessage("❌ Withdraw failed");
     }
   };
 
-  // 🚪 Logout
+  // ===============================
+  // ✅ LOGOUT
+  // ===============================
   const logout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/";
+    localStorage.clear();
+    navigate("/");
   };
 
   return (
-    <>
-      <Navbar />
-
-      <div style={styles.container}>
-        <div style={styles.card}>
-
-          <h2>🏦 Banking Dashboard</h2>
-
-          <p>Welcome, <b>{username}</b></p>
-
-          <h1 style={styles.balance}>₹{balance}</h1>
-
-          <input
-            type="number"
-            placeholder="Enter amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            style={styles.input}
-          />
-
-          <button style={styles.deposit} onClick={handleDeposit}>
-            💰 Deposit
-          </button>
-
-          <button style={styles.withdraw} onClick={handleWithdraw}>
-            💸 Withdraw
-          </button>
-
-          <button style={styles.refresh} onClick={fetchData}>
-            🔄 Refresh Balance
-          </button>
-
-          <button style={styles.logout} onClick={logout}>
-            🚪 Logout
-          </button>
-
-          {/* Message */}
-          {message && <p style={styles.message}>{message}</p>}
-
-          {/* 🔘 Toggle Button */}
-          <button
-            style={styles.transactionsBtn}
-            onClick={() => setShowTransactions(!showTransactions)}
-          >
-            📊 {showTransactions ? "Hide Transactions" : "Show Transactions"}
-          </button>
-
-          {/* 📊 Transactions List */}
-          {showTransactions && (
-            <ul style={styles.list}>
-              {Array.isArray(transactions) &&
-                transactions.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-            </ul>
-          )}
-
-        </div>
+    <div style={styles.container}>
+      <div style={styles.navbar}>
+        <h3>🏦 Banking App</h3>
+        <button onClick={logout} style={styles.logout}>
+          Logout
+        </button>
       </div>
-    </>
-  );
-}
 
-// 🎨 Styles
+      <div style={styles.card}>
+        <h2>Banking Dashboard</h2>
+        <p>Welcome, <b>{username}</b></p>
+
+        <h1>₹{balance}</h1>
+
+        <input
+          placeholder="Enter amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          style={styles.input}
+        />
+
+        <button onClick={deposit} style={styles.deposit}>
+          Deposit
+        </button>
+
+        <button onClick={withdraw} style={styles.withdraw}>
+          Withdraw
+        </button>
+
+        <button onClick={fetchBalance} style={styles.refresh}>
+          Refresh Balance
+        </button>
+
+        <p>{message}</p>
+
+        <h3>Transaction History</h3>
+
+        {transactions.length === 0 ? (
+          <p>No transactions yet</p>
+        ) : (
+          transactions.map((tx, index) => (
+            <div key={index} style={styles.tx}>
+              <p>
+                {tx.type} - ₹{tx.amount}
+              </p>
+              <small>{tx.timestamp}</small>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
 const styles = {
   container: {
-    height: "100vh",
+    minHeight: "100vh",
+    background: "linear-gradient(to right, #6a11cb, #2575fc)",
+  },
+  navbar: {
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: "linear-gradient(to right, #667eea, #764ba2)",
+    justifyContent: "space-between",
+    padding: "15px",
+    color: "white",
+  },
+  logout: {
+    background: "red",
+    color: "white",
+    border: "none",
+    padding: "10px",
+    cursor: "pointer",
   },
   card: {
     background: "white",
-    padding: "30px",
-    borderRadius: "15px",
     width: "350px",
+    margin: "50px auto",
+    padding: "20px",
+    borderRadius: "10px",
     textAlign: "center",
-    boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
-  },
-  balance: {
-    margin: "20px 0",
-    fontSize: "28px",
   },
   input: {
     width: "100%",
     padding: "10px",
-    marginTop: "10px",
-    borderRadius: "8px",
-    border: "1px solid #ccc",
+    margin: "10px 0",
   },
   deposit: {
     width: "100%",
-    marginTop: "10px",
     padding: "10px",
     background: "green",
     color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
+    marginTop: "5px",
   },
   withdraw: {
     width: "100%",
-    marginTop: "10px",
     padding: "10px",
     background: "orange",
     color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
+    marginTop: "5px",
   },
   refresh: {
     width: "100%",
-    marginTop: "10px",
     padding: "10px",
-    background: "#4facfe",
+    background: "blue",
     color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
+    marginTop: "5px",
   },
-  logout: {
-    width: "100%",
-    marginTop: "10px",
-    padding: "10px",
-    background: "red",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-  },
-  transactionsBtn: {
-    width: "100%",
-    marginTop: "15px",
-    padding: "10px",
-    background: "#6c5ce7",
-    color: "white",
-    border: "none",
-    borderRadius: "8px",
-    cursor: "pointer",
-  },
-  message: {
-    marginTop: "12px",
-    fontWeight: "bold",
-  },
-  list: {
-    textAlign: "left",
+  tx: {
+    borderBottom: "1px solid #ccc",
     marginTop: "10px",
   },
 };
