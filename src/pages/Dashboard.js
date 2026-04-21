@@ -5,10 +5,11 @@ function Dashboard() {
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState("");
   const [username, setUsername] = useState("");
+  const [message, setMessage] = useState("");
 
   const token = localStorage.getItem("token");
 
-  // ✅ Fetch balance
+  // 🔄 Fetch Balance
   const fetchBalance = async () => {
     try {
       const decoded = jwtDecode(token);
@@ -21,9 +22,9 @@ function Dashboard() {
 
       const data = await res.json();
       setBalance(data.balance);
-
     } catch (error) {
       console.error(error);
+      setMessage("❌ Failed to load balance");
     }
   };
 
@@ -33,22 +34,56 @@ function Dashboard() {
 
   // 💰 Deposit
   const handleDeposit = async () => {
-    await fetch(
-      `http://localhost:8080/user/deposit?userId=1&amount=${amount}`,
-      { method: "POST" }
-    );
+    try {
+      const decoded = jwtDecode(token);
+      const user = decoded.sub;
 
-    fetchBalance();
+      const res = await fetch(
+        `http://localhost:8080/user/deposit?username=${user}&amount=${amount}`,
+        { method: "POST" }
+      );
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      setMessage("✅ Deposit successful");
+      setAmount("");
+      fetchBalance();
+
+    } catch (error) {
+      setMessage("❌ Deposit failed");
+    }
   };
 
   // 💸 Withdraw
   const handleWithdraw = async () => {
-    await fetch(
-      `http://localhost:8080/user/withdraw?userId=1&amount=${amount}`,
-      { method: "POST" }
-    );
+    try {
+      const decoded = jwtDecode(token);
+      const user = decoded.sub;
 
+      const res = await fetch(
+        `http://localhost:8080/user/withdraw?username=${user}&amount=${amount}`,
+        { method: "POST" }
+      );
+
+      if (!res.ok) {
+        throw new Error("Insufficient balance");
+      }
+
+      setMessage("✅ Withdraw successful");
+      setAmount("");
+      fetchBalance();
+
+    } catch (error) {
+      setMessage("❌ Insufficient balance");
+    }
+  };
+
+  // 🔄 Refresh
+  const handleRefresh = () => {
     fetchBalance();
+    setMessage("");
   };
 
   // 🚪 Logout
@@ -61,7 +96,8 @@ function Dashboard() {
     <div style={styles.container}>
       <div style={styles.card}>
         <h2>🏦 Banking Dashboard</h2>
-        <p>Welcome, {username}</p>
+
+        <p>Welcome, <b>{username}</b></p>
 
         <h1 style={styles.balance}>₹{balance}</h1>
 
@@ -81,19 +117,22 @@ function Dashboard() {
           💸 Withdraw
         </button>
 
-        <button style={styles.refresh} onClick={fetchBalance}>
+        <button style={styles.refresh} onClick={handleRefresh}>
           🔄 Refresh Balance
         </button>
 
         <button style={styles.logout} onClick={logout}>
           🚪 Logout
         </button>
+
+        {/* ✅ Message */}
+        {message && <p style={styles.message}>{message}</p>}
       </div>
     </div>
   );
 }
 
-// 🎨 STYLES
+// 🎨 Styles
 const styles = {
   container: {
     height: "100vh",
@@ -112,6 +151,7 @@ const styles = {
   },
   balance: {
     margin: "20px 0",
+    fontSize: "28px",
   },
   input: {
     width: "100%",
@@ -148,6 +188,7 @@ const styles = {
     color: "white",
     border: "none",
     borderRadius: "8px",
+    cursor: "pointer",
   },
   logout: {
     width: "100%",
@@ -158,6 +199,10 @@ const styles = {
     border: "none",
     borderRadius: "8px",
     cursor: "pointer",
+  },
+  message: {
+    marginTop: "15px",
+    fontWeight: "bold",
   },
 };
 

@@ -21,25 +21,21 @@ function Login() {
       const data = await response.json();
       console.log("LOGIN RESPONSE:", data);
 
-      // ✅ Since backend is fixed, token will be here
       if (!data.token) {
         setMessage("❌ Invalid Username or Password");
         return;
       }
 
-      // 🔐 Save JWT
       localStorage.setItem("token", data.token);
 
-      // ✅ Success message
       setMessage("✅ Login Successful!");
 
-      // 🔁 Redirect to dashboard
       setTimeout(() => {
         window.location.href = "/dashboard";
       }, 1000);
 
     } catch (error) {
-      console.error("LOGIN ERROR:", error);
+      console.error(error);
       setMessage("❌ Server error");
     }
   };
@@ -70,12 +66,20 @@ function Login() {
         </button>
 
         <p style={styles.message}>{message}</p>
+
+        {/* 🔥 SIGNUP LINK */}
+        <p
+          style={styles.link}
+          onClick={() => (window.location.href = "/signup")}
+        >
+          Don’t have an account? Sign Up
+        </p>
       </div>
     </div>
   );
 }
 
-// 🎨 STYLES
+// 🎨 Styles
 const styles = {
   container: {
     height: "100vh",
@@ -110,7 +114,12 @@ const styles = {
     fontWeight: "bold",
   },
   message: {
+    marginTop: "10px",
+  },
+  link: {
     marginTop: "15px",
+    color: "#4facfe",
+    cursor: "pointer",
     fontWeight: "bold",
   },
 };
