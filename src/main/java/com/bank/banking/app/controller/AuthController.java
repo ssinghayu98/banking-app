@@ -1,41 +1,33 @@
 package com.bank.banking.app.controller;
 
-import com.bank.banking.app.dto.AuthRequest;
-import com.bank.banking.app.dto.AuthResponse;
-import com.bank.banking.app.security.JwtUtil;
-import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import com.bank.banking.app.model.User;
+import com.bank.banking.app.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody AuthRequest request) {
+    public String login(@RequestBody User user) {
 
-        logger.info("Login attempt for username: {}", request.getUsername());
+        User dbUser = userRepository.findByUsername(user.getUsername());
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
-                )
-        );
+        if (dbUser != null && dbUser.getPassword().equals(user.getPassword())) {
+            return "SUCCESS";
+        }
 
-        String token = jwtUtil.generateToken(request.getUsername());
+        return "FAIL";
+    }
 
-        logger.info("Login successful for username: {}", request.getUsername());
-
-        return new AuthResponse(token);
+    @PostMapping("/register")
+    public String register(@RequestBody User user) {
+        userRepository.save(user);
+        return "REGISTERED";
     }
 }

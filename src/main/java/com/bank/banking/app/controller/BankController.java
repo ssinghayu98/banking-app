@@ -1,67 +1,46 @@
 package com.bank.banking.app.controller;
 
-import com.bank.banking.app.dto.AmountRequest;
-import com.bank.banking.app.dto.ApiResponse;
-import com.bank.banking.app.dto.TransactionResponseDto;
-import com.bank.banking.app.dto.TransferRequest;
 import com.bank.banking.app.model.User;
 import com.bank.banking.app.service.UserService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/bank")
-@RequiredArgsConstructor
+@RequestMapping("/user")
+@CrossOrigin(origins = "*") // allow React frontend
 public class BankController {
 
     private final UserService userService;
 
-    @PostMapping("/deposit")
-    public ApiResponse<String> deposit(@Valid @RequestBody AmountRequest request, Authentication authentication) {
-        User user = userService.getUserByUsername(authentication.getName());
-        String result = userService.deposit(user.getId(), request.getAmount());
-
-        return new ApiResponse<>("Deposit successful", result);
+    // Constructor Injection
+    public BankController(UserService userService) {
+        this.userService = userService;
     }
 
-    @PostMapping("/withdraw")
-    public ApiResponse<String> withdraw(@Valid @RequestBody AmountRequest request, Authentication authentication) {
-        User user = userService.getUserByUsername(authentication.getName());
-        String result = userService.withdraw(user.getId(), request.getAmount());
+    // ✅ Get User Profile
+    @GetMapping("/profile")
+    public ResponseEntity<?> getUser(@RequestParam String username) {
+        User user = userService.getUserByUsername(username);
 
-        return new ApiResponse<>("Withdrawal successful", result);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+
+        return ResponseEntity.ok(user);
     }
 
-    @GetMapping("/balance")
-    public ApiResponse<Double> checkBalance(Authentication authentication) {
-        User user = userService.getUserByUsername(authentication.getName());
-        Double balance = userService.checkBalance(user.getId());
+    // ✅ Get Balance (FIXED)
+    @GetMapping("/balance/{username}")
+    public ResponseEntity<?> getBalance(@PathVariable String username) {
 
-        return new ApiResponse<>("Balance fetched successfully", balance);
-    }
+        User user = userService.getUserByUsername(username);
 
-    @PostMapping("/transfer")
-    public ApiResponse<String> transfer(@Valid @RequestBody TransferRequest request, Authentication authentication) {
-        User user = userService.getUserByUsername(authentication.getName());
-        String result = userService.transferMoney(
-                user.getId(),
-                request.getReceiverId(),
-                request.getAmount()
-        );
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
 
-        return new ApiResponse<>("Transfer successful", result);
-    }
-
-    @GetMapping("/transactions")
-    public ApiResponse<List<TransactionResponseDto>> getAllTransactions(Authentication authentication) {
-        User user = userService.getUserByUsername(authentication.getName());
-        List<TransactionResponseDto> transactions =
-                userService.getTransactionsByUserId(user.getId());
-
-        return new ApiResponse<>("Transactions fetched successfully", transactions);
+        return ResponseEntity.ok(Map.of("balance", user.getBalance()));
     }
 }

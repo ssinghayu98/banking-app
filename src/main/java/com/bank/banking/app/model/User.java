@@ -1,6 +1,5 @@
 package com.bank.banking.app.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,51 +11,27 @@ public class User {
     private Long id;
 
     private String username;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+    private Double balance = 0.0;
+    private String role = "USER";
 
-    private Double balance;
+    // GETTERS & SETTERS
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    public Long getId() { return id; }
 
-    public User() {
-    }
+    public String getUsername() { return username; }
 
-    public Long getId() {
-        return id;
-    }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getPassword() { return password; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public void setPassword(String password) { this.password = password; }
 
-    public String getPassword() {
-        return password;
-    }
+    public Double getBalance() { return balance; }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public void setBalance(Double balance) { this.balance = balance; }
 
-    public Double getBalance() {
-        return balance;
-    }
+    public String getRole() { return role; }
 
-    public void setBalance(Double balance) {
-        this.balance = balance;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
-    }
+    public void setRole(String role) { this.role = role; }
 }

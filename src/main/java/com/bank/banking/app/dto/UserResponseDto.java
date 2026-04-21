@@ -1,24 +1,13 @@
 package com.bank.banking.app.dto;
 
-import com.bank.banking.app.model.Role;
-
 public class UserResponseDto {
 
     private Long id;
     private String username;
     private Double balance;
-    private Role role;
+    private String role;
 
-    public UserResponseDto() {
-    }
-
-    public UserResponseDto(Long id, String username, Double balance, Role role) {
-        this.id = id;
-        this.username = username;
-        this.balance = balance;
-        this.role = role;
-    }
-
+    // ✅ GETTERS
     public Long getId() {
         return id;
     }
@@ -31,7 +20,24 @@ public class UserResponseDto {
         return balance;
     }
 
-    public Role getRole() {
+    public String getRole() {
         return role;
+    }
+
+    // ✅ SETTERS
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

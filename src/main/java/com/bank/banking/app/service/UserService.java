@@ -1,169 +1,78 @@
 package com.bank.banking.app.service;
 
-import com.bank.banking.app.dto.TransactionResponseDto;
-import com.bank.banking.app.dto.UserResponseDto;
-import com.bank.banking.app.exception.InsufficientBalanceException;
-import com.bank.banking.app.exception.InvalidAmountException;
-import com.bank.banking.app.exception.InvalidTransferException;
-import com.bank.banking.app.exception.UserNotFoundException;
-import com.bank.banking.app.exception.UsernameAlreadyExistsException;
-import com.bank.banking.app.model.Role;
-import com.bank.banking.app.model.Transaction;
 import com.bank.banking.app.model.User;
-import com.bank.banking.app.repository.TransactionRepository;
 import com.bank.banking.app.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
-    private final TransactionRepository transactionRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository,
-                       TransactionRepository transactionRepository,
-                       PasswordEncoder passwordEncoder) {
+    // Constructor Injection
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.transactionRepository = transactionRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
-    // ==========================
-    // 🔐 DAY 17 HELPER METHODS
-    // ==========================
-
+    // ✅ Get user by username (FIXED - REAL DB FETCH)
     public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        return userRepository.findByUsername(username);
     }
 
-    public List<TransactionResponseDto> getTransactionsByUserId(Long userId) {
-        return transactionRepository.findAll()
-                .stream()
-                .filter(t -> t.getSenderId().equals(userId) || t.getReceiverId().equals(userId))
-                .map(this::mapToTransactionResponseDto)
-                .toList();
-    }
-
-    // ==========================
-    // 👤 ADMIN + USER COMMON
-    // ==========================
-
-    public UserResponseDto registerUser(User user) {
-        if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-            throw new RuntimeException("Username cannot be empty");
-        }
-
-        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
-            throw new RuntimeException("Password cannot be empty");
-        }
-
-        String cleanedUsername = user.getUsername().trim();
-        user.setUsername(cleanedUsername);
-
-        if (userRepository.findByUsername(cleanedUsername).isPresent()) {
-            throw new UsernameAlreadyExistsException("Username already exists");
-        }
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        if (user.getBalance() == null) {
-            user.setBalance(0.0);
-        }
-
-        user.setRole(Role.USER);
-
-        User savedUser = userRepository.save(user);
-        return mapToUserResponseDto(savedUser);
-    }
-
-    public List<UserResponseDto> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::mapToUserResponseDto)
-                .toList();
-    }
-
-    // ==========================
-    // 💰 BANK OPERATIONS
-    // ==========================
-
+    // ✅ Deposit (basic version)
     public String deposit(Long userId, Double amount) {
-        if (amount == null || amount <= 0) {
-            throw new InvalidAmountException("Amount must be greater than zero");
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            return "User not found";
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
+        User user = optionalUser.get();
         user.setBalance(user.getBalance() + amount);
+
         userRepository.save(user);
-
-        Transaction transaction = new Transaction();
-        transaction.setSenderId(0L);
-        transaction.setReceiverId(userId);
-        transaction.setAmount(amount);
-        transaction.setType("DEPOSIT");
-
-        transactionRepository.save(transaction);
 
         return "Amount deposited successfully";
     }
 
+    // ✅ Withdraw (basic version)
     public String withdraw(Long userId, Double amount) {
-        if (amount == null || amount <= 0) {
-            throw new InvalidAmountException("Amount must be greater than zero");
+        Optional<User> optionalUser = userRepository.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            return "User not found";
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = optionalUser.get();
 
         if (user.getBalance() < amount) {
-            throw new InsufficientBalanceException("Insufficient balance");
+            return "Insufficient balance";
         }
 
         user.setBalance(user.getBalance() - amount);
+
         userRepository.save(user);
-
-        Transaction transaction = new Transaction();
-        transaction.setSenderId(userId);
-        transaction.setReceiverId(0L);
-        transaction.setAmount(amount);
-        transaction.setType("WITHDRAW");
-
-        transactionRepository.save(transaction);
 
         return "Amount withdrawn successfully";
     }
 
-    public Double checkBalance(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        return user.getBalance();
-    }
-
+    // ✅ Transfer (basic version)
     public String transferMoney(Long senderId, Long receiverId, Double amount) {
-        if (amount == null || amount <= 0) {
-            throw new InvalidAmountException("Amount must be greater than zero");
+
+        Optional<User> senderOpt = userRepository.findById(senderId);
+        Optional<User> receiverOpt = userRepository.findById(receiverId);
+
+        if (senderOpt.isEmpty() || receiverOpt.isEmpty()) {
+            return "User not found";
         }
 
-        if (senderId.equals(receiverId)) {
-            throw new InvalidTransferException("Sender and receiver cannot be same");
-        }
-
-        User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new UserNotFoundException("Sender not found"));
-
-        User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new UserNotFoundException("Receiver not found"));
+        User sender = senderOpt.get();
+        User receiver = receiverOpt.get();
 
         if (sender.getBalance() < amount) {
-            throw new InsufficientBalanceException("Insufficient balance");
+            return "Insufficient balance";
         }
 
         sender.setBalance(sender.getBalance() - amount);
@@ -172,61 +81,11 @@ public class UserService {
         userRepository.save(sender);
         userRepository.save(receiver);
 
-        Transaction transaction = new Transaction();
-        transaction.setSenderId(senderId);
-        transaction.setReceiverId(receiverId);
-        transaction.setAmount(amount);
-        transaction.setType("TRANSFER");
-
-        transactionRepository.save(transaction);
-
-        return "Transfer successful";
+        return "Money transferred successfully";
     }
 
-    // ==========================
-    // 📊 ADMIN TRANSACTIONS
-    // ==========================
-
-    public List<TransactionResponseDto> getAllTransactions() {
-        return transactionRepository.findAll()
-                .stream()
-                .map(this::mapToTransactionResponseDto)
-                .toList();
-    }
-
-    // ==========================
-    // 🗑 ADMIN DELETE
-    // ==========================
-
-    public String deleteUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-
-        userRepository.delete(user);
-
-        return "User deleted successfully";
-    }
-
-    // ==========================
-    // 🔄 DTO MAPPERS
-    // ==========================
-
-    private UserResponseDto mapToUserResponseDto(User user) {
-        return new UserResponseDto(
-                user.getId(),
-                user.getUsername(),
-                user.getBalance(),
-                user.getRole()
-        );
-    }
-
-    private TransactionResponseDto mapToTransactionResponseDto(Transaction transaction) {
-        return new TransactionResponseDto(
-                transaction.getId(),
-                transaction.getSenderId(),
-                transaction.getReceiverId(),
-                transaction.getAmount(),
-                transaction.getType()
-        );
+    // ✅ Dummy transactions (we will upgrade later)
+    public List<String> getTransactionsByUserId(Long userId) {
+        return Arrays.asList("TXN1", "TXN2");
     }
 }
