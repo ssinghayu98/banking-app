@@ -1,33 +1,32 @@
 package com.bank.banking.app.controller;
 
-import com.bank.banking.app.model.User;
-import com.bank.banking.app.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.bank.banking.app.dto.LoginRequest;
+import com.bank.banking.app.service.AuthService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*") // 🔥 VERY IMPORTANT for React
 public class AuthController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final AuthService authService;
 
-    @PostMapping("/login")
-    public String login(@RequestBody User user) {
-
-        User dbUser = userRepository.findByUsername(user.getUsername());
-
-        if (dbUser != null && dbUser.getPassword().equals(user.getPassword())) {
-            return "SUCCESS";
-        }
-
-        return "FAIL";
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
-    @PostMapping("/register")
-    public String register(@RequestBody User user) {
-        userRepository.save(user);
-        return "REGISTERED";
+    // 🔐 LOGIN API
+    @PostMapping("/login")
+    public Map<String, String> login(@RequestBody LoginRequest request) {
+
+        String token = authService.login(
+                request.getUsername(),
+                request.getPassword()
+        );
+
+        // ✅ RETURN JSON (NOT STRING)
+        return Map.of("token", token);
     }
 }
