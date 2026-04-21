@@ -4,10 +4,15 @@ import com.bank.banking.app.model.User;
 import com.bank.banking.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
+
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+
+    // 🧠 In-memory transaction storage (temporary)
+    private final Map<String, List<String>> transactions = new HashMap<>();
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -21,7 +26,6 @@ public class UserService {
             throw new RuntimeException("User not found");
         }
 
-        // ✅ Ensure balance is never null
         if (user.getBalance() == null) {
             user.setBalance(0.0);
         }
@@ -32,23 +36,19 @@ public class UserService {
     // 💰 Deposit
     public String depositByUsername(String username, Double amount) {
 
-        User user = userRepository.findByUsername(username);
+        User user = getUserByUsername(username);
 
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        // 🚨 Validate amount
         if (amount == null || amount <= 0) {
             throw new RuntimeException("Invalid deposit amount");
         }
 
-        if (user.getBalance() == null) {
-            user.setBalance(0.0);
-        }
-
         user.setBalance(user.getBalance() + amount);
         userRepository.save(user);
+
+        // 📊 Save transaction
+        transactions
+                .computeIfAbsent(username, k -> new ArrayList<>())
+                .add("Deposited ₹" + amount);
 
         return "Deposit successful";
     }
@@ -56,22 +56,12 @@ public class UserService {
     // 💸 Withdraw
     public String withdrawByUsername(String username, Double amount) {
 
-        User user = userRepository.findByUsername(username);
+        User user = getUserByUsername(username);
 
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        // 🚨 Validate amount
         if (amount == null || amount <= 0) {
             throw new RuntimeException("Invalid withdraw amount");
         }
 
-        if (user.getBalance() == null) {
-            user.setBalance(0.0);
-        }
-
-        // 🚨 STRICT RULE: no negative balance
         if (user.getBalance() - amount < 0) {
             throw new RuntimeException("Insufficient balance");
         }
@@ -79,6 +69,16 @@ public class UserService {
         user.setBalance(user.getBalance() - amount);
         userRepository.save(user);
 
+        // 📊 Save transaction
+        transactions
+                .computeIfAbsent(username, k -> new ArrayList<>())
+                .add("Withdrew ₹" + amount);
+
         return "Withdraw successful";
+    }
+
+    // 📊 Get transactions
+    public List<String> getTransactions(String username) {
+        return transactions.getOrDefault(username, new ArrayList<>());
     }
 }
