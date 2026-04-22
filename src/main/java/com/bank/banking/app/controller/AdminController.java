@@ -14,19 +14,27 @@ public class AdminController {
         this.userService = userService;
     }
 
-    // ✅ DEPOSIT
+    // ===============================
+    // ➕ ADMIN DEPOSIT
+    // ===============================
     @PostMapping("/deposit")
     public String deposit(@RequestParam String username,
                           @RequestParam Double amount) {
 
-        return userService.deposit(username, amount);
+        userService.deposit(username, amount); // ✅ call only
+
+        return "Admin deposit successful";     // ✅ return message
     }
 
-    // ✅ WITHDRAW
+    // ===============================
+    // ➖ ADMIN WITHDRAW
+    // ===============================
     @PostMapping("/withdraw")
     public String withdraw(@RequestParam String username,
                            @RequestParam Double amount) {
 
-        return userService.withdraw(username, amount);
+        userService.withdraw(username, amount);
+
+        return "Admin withdraw successful";
     }
 }

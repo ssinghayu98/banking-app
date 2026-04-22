@@ -12,26 +12,25 @@ public class JwtUtil {
 
     private final String SECRET = "mysecretkeymysecretkeymysecretkey123456";
 
-    private Key getSigningKey() {
+    private Key getKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
     }
 
-    // ✅ GENERATE TOKEN
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
-                .signWith(getSigningKey())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .signWith(getKey())
                 .compact();
     }
 
-    // ✅ EXTRACT CLAIMS
-    public Claims extractAllClaims(String token) {
+    public String extractUsername(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+                .setSigningKey(getKey())
                 .build()
                 .parseClaimsJws(token)
-                .getBody();
+                .getBody()
+                .getSubject();
     }
 }

@@ -1,60 +1,65 @@
 package com.bank.banking.app.security;
 
-import jakarta.servlet.*;
+import com.bank.banking.app.service.CustomUserDetailsService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 @Component
-public class JwtFilter implements Filter {
+public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService userDetailsService;
 
-    public JwtFilter(JwtUtil jwtUtil) {
+    public JwtFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
 
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse res = (HttpServletResponse) response;
+        String authHeader = request.getHeader("Authorization");
 
-        String path = req.getRequestURI();
+        String username = null;
 
-        // ✅ Allow auth endpoints
-        if (path.startsWith("/auth")) {
-            chain.doFilter(request, response);
-            return;
-        }
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
 
-        String authHeader = req.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-
-        try {
             String token = authHeader.substring(7);
 
-            String username = jwtUtil.extractAllClaims(token).getSubject();
-
-            if (username == null) {
-                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+            try {
+                username = jwtUtil.extractUsername(token);
+                System.out.println("✅ USER FROM TOKEN: " + username);
+            } catch (Exception e) {
+                System.out.println("❌ TOKEN ERROR: " + e.getMessage());
             }
-
-            req.setAttribute("username", username);
-
-        } catch (Exception e) {
-            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
         }
 
-        chain.doFilter(request, response);
+        if (username != null) {
+
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+
+            SecurityContextHolder.getContext().setAuthentication(auth);
+        }
+
+        filterChain.doFilter(request, response);
     }
 }

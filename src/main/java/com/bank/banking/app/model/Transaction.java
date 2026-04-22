@@ -1,5 +1,6 @@
 package com.bank.banking.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore; // ✅ IMPORTANT
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,9 +12,10 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // ✅ RELATION WITH USER (IMPORTANT)
+    // ✅ RELATION WITH USER (FIXED)
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore   // 🔥 THIS FIXES INFINITE JSON LOOP
     private User user;
 
     // ✅ TYPE: DEPOSIT / WITHDRAW / TRANSFER
@@ -31,7 +33,7 @@ public class Transaction {
 
     public Transaction() {}
 
-    // ✅ BEST CONSTRUCTOR (use this)
+    // ✅ BEST CONSTRUCTOR
     public Transaction(User user, String type, Double amount) {
         this.user = user;
         this.type = type;
@@ -39,7 +41,7 @@ public class Transaction {
         this.timestamp = LocalDateTime.now();
     }
 
-    // ✅ FULL CONSTRUCTOR (for transfer later)
+    // ✅ FULL CONSTRUCTOR (future transfer)
     public Transaction(User user, String type, Double amount, String sender, String receiver) {
         this.user = user;
         this.type = type;

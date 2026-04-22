@@ -34,6 +34,7 @@ public class ApplicationConfig {
         return config.getAuthenticationManager();
     }
 
+
     // ✅ PASSWORD ENCODER (CRITICAL)
     @Bean
     public PasswordEncoder passwordEncoder() {

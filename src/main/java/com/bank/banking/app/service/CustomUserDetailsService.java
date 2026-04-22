@@ -5,6 +5,8 @@ import com.bank.banking.app.repository.UserRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -28,11 +30,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         System.out.println("✅ User found: " + user.getUsername());
 
-        return org.springframework.security.core.userdetails.User
-                .builder()
-                .username(user.getUsername())
-                .password(user.getPassword()) // 🔥 MUST be encrypted password from DB
-                .roles(user.getRole())        // USER
-                .build();
+        // 🔥 FINAL FIX → NO ROLES (prevents 403 issues)
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                new ArrayList<>() // ✅ empty authorities = safe for authenticated()
+        );
     }
 }

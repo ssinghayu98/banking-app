@@ -22,9 +22,9 @@ public class UserService {
     }
 
     // ===============================
-    // ✅ DEPOSIT
+    // 💰 GET BALANCE
     // ===============================
-    public String deposit(String username, Double amount) {
+    public double getBalance(String username) {
 
         User user = userRepository.findByUsername(username);
 
@@ -32,27 +32,17 @@ public class UserService {
             throw new RuntimeException("User not found");
         }
 
-        if (amount <= 0) {
-            throw new RuntimeException("Invalid amount");
-        }
+        System.out.println("💰 Balance fetched for: " + username);
 
-        // ✅ update balance
-        user.setBalance(user.getBalance() + amount);
-        userRepository.save(user);
-
-        // ✅ save transaction (FIXED)
-        Transaction tx = new Transaction(user, "DEPOSIT", amount);
-        tx.setTimestamp(LocalDateTime.now());
-
-        transactionRepository.save(tx);
-
-        return "Deposit successful";
+        return user.getBalance();
     }
 
     // ===============================
-    // ✅ WITHDRAW
+    // ➕ DEPOSIT
     // ===============================
-    public String withdraw(String username, Double amount) {
+    public void deposit(String username, double amount) {
+
+        System.out.println("➕ DEPOSIT CALLED: " + username + " | Amount: " + amount);
 
         User user = userRepository.findByUsername(username);
 
@@ -61,30 +51,70 @@ public class UserService {
         }
 
         if (amount <= 0) {
-            throw new RuntimeException("Invalid amount");
+            throw new RuntimeException("Amount must be greater than 0");
+        }
+
+        // Update balance
+        user.setBalance(user.getBalance() + amount);
+
+        // Create transaction
+        Transaction transaction = new Transaction();
+        transaction.setType("DEPOSIT");
+        transaction.setAmount(amount);
+        transaction.setUser(user);
+        transaction.setTimestamp(LocalDateTime.now()); // ✅ IMPORTANT
+
+        // Save
+        transactionRepository.save(transaction);
+        userRepository.save(user);
+
+        System.out.println("✅ DEPOSIT SUCCESS");
+    }
+
+    // ===============================
+    // ➖ WITHDRAW
+    // ===============================
+    public void withdraw(String username, double amount) {
+
+        System.out.println("➖ WITHDRAW CALLED: " + username + " | Amount: " + amount);
+
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        if (amount <= 0) {
+            throw new RuntimeException("Amount must be greater than 0");
         }
 
         if (user.getBalance() < amount) {
             throw new RuntimeException("Insufficient balance");
         }
 
-        // ✅ update balance
+        // Update balance
         user.setBalance(user.getBalance() - amount);
+
+        // Create transaction
+        Transaction transaction = new Transaction();
+        transaction.setType("WITHDRAW");
+        transaction.setAmount(amount);
+        transaction.setUser(user);
+        transaction.setTimestamp(LocalDateTime.now()); // ✅ IMPORTANT
+
+        // Save
+        transactionRepository.save(transaction);
         userRepository.save(user);
 
-        // ✅ save transaction (FIXED)
-        Transaction tx = new Transaction(user, "WITHDRAW", amount);
-        tx.setTimestamp(LocalDateTime.now());
-
-        transactionRepository.save(tx);
-
-        return "Withdraw successful";
+        System.out.println("✅ WITHDRAW SUCCESS");
     }
 
     // ===============================
-    // ✅ GET BALANCE
+    // 📜 GET TRANSACTIONS
     // ===============================
-    public Double getBalance(String username) {
+    public List<Transaction> getTransactions(String username) {
+
+        System.out.println("📜 FETCHING TRANSACTIONS FOR: " + username);
 
         User user = userRepository.findByUsername(username);
 
@@ -92,14 +122,10 @@ public class UserService {
             throw new RuntimeException("User not found");
         }
 
-        return user.getBalance();
-    }
+        List<Transaction> transactions = transactionRepository.findByUser(user);
 
-    // ===============================
-    // ✅ GET TRANSACTIONS
-    // ===============================
-    public List<Transaction> getTransactions(String username) {
+        System.out.println("🔥 Transactions found: " + transactions.size());
 
-        return transactionRepository.findByUserUsername(username);
+        return transactions;
     }
 }
