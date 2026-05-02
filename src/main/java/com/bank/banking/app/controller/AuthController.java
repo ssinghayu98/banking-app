@@ -23,26 +23,29 @@ public class AuthController {
     public ApiResponse<String> register(@RequestBody LoginRequest request) {
 
         try {
-            String message = authService.register(request.getUsername(), request.getPassword());
-            return ApiResponse.success(message);
+            authService.register(request.getUsername(), request.getPassword());
+            return new ApiResponse<>("Registration successful", null);
 
         } catch (Exception e) {
-            return ApiResponse.error(e.getMessage());
+            return new ApiResponse<>(e.getMessage(), null);
         }
     }
 
     // ===============================
-    // 🔐 LOGIN
+    // 🔐 LOGIN (FIXED)
     // ===============================
     @PostMapping("/login")
     public ApiResponse<String> login(@RequestBody LoginRequest request) {
 
         try {
-            String token = authService.login(request.getUsername(), request.getPassword());
-            return ApiResponse.success(token);
+            // ✅ Validate user
+            authService.login(request.getUsername(), request.getPassword());
+
+            // ✅ Only return success if valid
+            return new ApiResponse<>("Login successful", null);
 
         } catch (Exception e) {
-            return ApiResponse.error(e.getMessage());
+            return new ApiResponse<>(e.getMessage(), null);
         }
     }
 }

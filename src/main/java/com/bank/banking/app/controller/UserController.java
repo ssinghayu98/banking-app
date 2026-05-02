@@ -54,6 +54,20 @@ public class UserController {
     }
 
     // ===============================
+    // 💸 TRANSFER (NEW)
+    // ===============================
+    @PostMapping("/transfer")
+    public ApiResponse<String> transfer(
+            @RequestParam String sender,
+            @RequestParam String receiver,
+            @RequestParam Double amount) {
+
+        userService.transfer(sender, receiver, amount);
+
+        return new ApiResponse<>("Transfer successful", null);
+    }
+
+    // ===============================
     // 📜 GET TRANSACTIONS
     // ===============================
     @GetMapping("/transactions")

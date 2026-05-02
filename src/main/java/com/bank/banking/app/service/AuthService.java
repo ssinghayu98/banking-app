@@ -2,64 +2,19 @@ package com.bank.banking.app.service;
 
 import com.bank.banking.app.model.User;
 import com.bank.banking.app.repository.UserRepository;
-import com.bank.banking.app.security.JwtUtil;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository,
-                       JwtUtil jwtUtil,
-                       PasswordEncoder passwordEncoder) {
+    // 🔥 Password encoder (IMPORTANT)
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    public AuthService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.jwtUtil = jwtUtil;
-        this.passwordEncoder = passwordEncoder;
-    }
-
-    // ===============================
-    // 🔐 LOGIN (WITH FULL DEBUG)
-    // ===============================
-    public String login(String username, String password) {
-
-        System.out.println("======== LOGIN DEBUG START ========");
-        System.out.println("INPUT USERNAME: " + username);
-        System.out.println("INPUT PASSWORD: " + password);
-
-        // 🔍 Find user
-        User user = userRepository.findByUsername(username);
-
-        if (user == null) {
-            System.out.println("❌ USER NOT FOUND IN DATABASE");
-            throw new RuntimeException("User not found");
-        }
-
-        System.out.println("✅ USER FOUND: " + user.getUsername());
-        System.out.println("DB PASSWORD (HASH): " + user.getPassword());
-
-        // 🔑 Compare encrypted password
-        boolean match = passwordEncoder.matches(password, user.getPassword());
-
-        System.out.println("PASSWORD MATCH RESULT: " + match);
-
-        if (!match) {
-            System.out.println("❌ PASSWORD DOES NOT MATCH");
-            throw new RuntimeException("Invalid username or password");
-        }
-
-        System.out.println("✅ PASSWORD MATCH SUCCESS");
-
-        // 🎟 Generate JWT token
-        String token = jwtUtil.generateToken(username);
-
-        System.out.println("✅ TOKEN GENERATED: " + token);
-        System.out.println("======== LOGIN DEBUG END ========");
-
-        return token;
     }
 
     // ===============================
@@ -67,29 +22,52 @@ public class AuthService {
     // ===============================
     public String register(String username, String password) {
 
-        System.out.println("======== REGISTER DEBUG ========");
-
         if (userRepository.findByUsername(username) != null) {
-            System.out.println("❌ USER ALREADY EXISTS");
             throw new RuntimeException("Username already exists");
         }
 
-        // 🔐 Encrypt password
-        String encodedPassword = passwordEncoder.encode(password);
-        System.out.println("ENCODED PASSWORD: " + encodedPassword);
+        // 🔥 HASH PASSWORD
+        String hashedPassword = passwordEncoder.encode(password);
 
-        // 👤 Create user
         User user = new User();
         user.setUsername(username);
-        user.setPassword(encodedPassword);
+        user.setPassword(hashedPassword);
         user.setBalance(0.0);
-        user.setRole("USER");
 
         userRepository.save(user);
 
-        System.out.println("✅ USER REGISTERED SUCCESSFULLY");
-        System.out.println("======== REGISTER END ========");
+        System.out.println("✅ USER REGISTERED: " + username);
 
-        return "User registered successfully";
+        return "Registration successful";
+    }
+
+    // ===============================
+    // 🔐 LOGIN (FIXED)
+    // ===============================
+    public String login(String username, String password) {
+
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            System.out.println("❌ USER NOT FOUND");
+            throw new RuntimeException("Invalid username or password");
+        }
+
+        System.out.println("✅ USER FOUND: " + username);
+        System.out.println("DB PASSWORD (HASH): " + user.getPassword());
+
+        // 🔥 CORRECT PASSWORD CHECK
+        boolean isMatch = passwordEncoder.matches(password, user.getPassword());
+
+        System.out.println("PASSWORD MATCH RESULT: " + isMatch);
+
+        if (!isMatch) {
+            System.out.println("❌ PASSWORD DOES NOT MATCH");
+            throw new RuntimeException("Invalid username or password");
+        }
+
+        System.out.println("✅ LOGIN SUCCESS");
+
+        return "SUCCESS";
     }
 }

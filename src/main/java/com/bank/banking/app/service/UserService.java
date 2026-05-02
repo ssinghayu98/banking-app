@@ -6,7 +6,6 @@ import com.bank.banking.app.repository.TransactionRepository;
 import com.bank.banking.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -26,14 +25,7 @@ public class UserService {
     // ===============================
     public double getBalance(String username) {
 
-        User user = userRepository.findByUsername(username);
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        System.out.println("💰 Balance fetched for: " + username);
-
+        User user = getUserOrThrow(username);
         return user.getBalance();
     }
 
@@ -42,33 +34,22 @@ public class UserService {
     // ===============================
     public void deposit(String username, double amount) {
 
-        System.out.println("➕ DEPOSIT CALLED: " + username + " | Amount: " + amount);
-
-        User user = userRepository.findByUsername(username);
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
         if (amount <= 0) {
             throw new RuntimeException("Amount must be greater than 0");
         }
 
-        // Update balance
+        User user = getUserOrThrow(username);
+
         user.setBalance(user.getBalance() + amount);
 
-        // Create transaction
-        Transaction transaction = new Transaction();
-        transaction.setType("DEPOSIT");
-        transaction.setAmount(amount);
-        transaction.setUser(user);
-        transaction.setTimestamp(LocalDateTime.now()); // ✅ IMPORTANT
+        Transaction transaction = new Transaction(
+                user,
+                "DEPOSIT",
+                amount
+        );
 
-        // Save
         transactionRepository.save(transaction);
         userRepository.save(user);
-
-        System.out.println("✅ DEPOSIT SUCCESS");
     }
 
     // ===============================
@@ -76,37 +57,77 @@ public class UserService {
     // ===============================
     public void withdraw(String username, double amount) {
 
-        System.out.println("➖ WITHDRAW CALLED: " + username + " | Amount: " + amount);
+        if (amount <= 0) {
+            throw new RuntimeException("Amount must be greater than 0");
+        }
 
-        User user = userRepository.findByUsername(username);
+        User user = getUserOrThrow(username);
 
-        if (user == null) {
-            throw new RuntimeException("User not found");
+        if (user.getBalance() < amount) {
+            throw new RuntimeException("Insufficient balance");
+        }
+
+        user.setBalance(user.getBalance() - amount);
+
+        Transaction transaction = new Transaction(
+                user,
+                "WITHDRAW",
+                amount
+        );
+
+        transactionRepository.save(transaction);
+        userRepository.save(user);
+    }
+
+    // ===============================
+    // 💸 TRANSFER (FINAL FIXED)
+    // ===============================
+    public void transfer(String senderUsername, String receiverUsername, double amount) {
+
+        if (senderUsername.equals(receiverUsername)) {
+            throw new RuntimeException("Cannot transfer to same user");
         }
 
         if (amount <= 0) {
             throw new RuntimeException("Amount must be greater than 0");
         }
 
-        if (user.getBalance() < amount) {
+        User sender = getUserOrThrow(senderUsername);
+        User receiver = getUserOrThrow(receiverUsername);
+
+        if (sender.getBalance() < amount) {
             throw new RuntimeException("Insufficient balance");
         }
 
-        // Update balance
-        user.setBalance(user.getBalance() - amount);
+        // 💰 Update balances
+        sender.setBalance(sender.getBalance() - amount);
+        receiver.setBalance(receiver.getBalance() + amount);
 
-        // Create transaction
-        Transaction transaction = new Transaction();
-        transaction.setType("WITHDRAW");
-        transaction.setAmount(amount);
-        transaction.setUser(user);
-        transaction.setTimestamp(LocalDateTime.now()); // ✅ IMPORTANT
+        // 🔥 SAVE BOTH SIDES (IMPORTANT)
 
-        // Save
-        transactionRepository.save(transaction);
-        userRepository.save(user);
+        // Sender view
+        Transaction sent = new Transaction(
+                sender,
+                "TRANSFER",
+                amount,
+                senderUsername,
+                receiverUsername
+        );
 
-        System.out.println("✅ WITHDRAW SUCCESS");
+        // Receiver view
+        Transaction received = new Transaction(
+                receiver,
+                "TRANSFER",
+                amount,
+                senderUsername,
+                receiverUsername
+        );
+
+        transactionRepository.save(sent);
+        transactionRepository.save(received);
+
+        userRepository.save(sender);
+        userRepository.save(receiver);
     }
 
     // ===============================
@@ -114,7 +135,14 @@ public class UserService {
     // ===============================
     public List<Transaction> getTransactions(String username) {
 
-        System.out.println("📜 FETCHING TRANSACTIONS FOR: " + username);
+        User user = getUserOrThrow(username);
+        return transactionRepository.findByUser(user);
+    }
+
+    // ===============================
+    // 🔧 HELPER METHOD
+    // ===============================
+    private User getUserOrThrow(String username) {
 
         User user = userRepository.findByUsername(username);
 
@@ -122,10 +150,6 @@ public class UserService {
             throw new RuntimeException("User not found");
         }
 
-        List<Transaction> transactions = transactionRepository.findByUser(user);
-
-        System.out.println("🔥 Transactions found: " + transactions.size());
-
-        return transactions;
+        return user;
     }
 }
