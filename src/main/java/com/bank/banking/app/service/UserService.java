@@ -5,7 +5,9 @@ import com.bank.banking.app.model.User;
 import com.bank.banking.app.repository.TransactionRepository;
 import com.bank.banking.app.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -24,9 +26,7 @@ public class UserService {
     // 💰 GET BALANCE
     // ===============================
     public double getBalance(String username) {
-
-        User user = getUserOrThrow(username);
-        return user.getBalance();
+        return getUserOrThrow(username).getBalance();
     }
 
     // ===============================
@@ -42,11 +42,11 @@ public class UserService {
 
         user.setBalance(user.getBalance() + amount);
 
-        Transaction transaction = new Transaction(
-                user,
-                "DEPOSIT",
-                amount
-        );
+        Transaction transaction = new Transaction();
+        transaction.setUser(user);
+        transaction.setType("DEPOSIT");
+        transaction.setAmount(amount);
+        transaction.setTimestamp(LocalDateTime.now());
 
         transactionRepository.save(transaction);
         userRepository.save(user);
@@ -69,11 +69,11 @@ public class UserService {
 
         user.setBalance(user.getBalance() - amount);
 
-        Transaction transaction = new Transaction(
-                user,
-                "WITHDRAW",
-                amount
-        );
+        Transaction transaction = new Transaction();
+        transaction.setUser(user);
+        transaction.setType("WITHDRAW");
+        transaction.setAmount(amount);
+        transaction.setTimestamp(LocalDateTime.now());
 
         transactionRepository.save(transaction);
         userRepository.save(user);
@@ -82,6 +82,7 @@ public class UserService {
     // ===============================
     // 💸 TRANSFER (FINAL FIXED)
     // ===============================
+    @Transactional
     public void transfer(String senderUsername, String receiverUsername, double amount) {
 
         if (senderUsername.equals(receiverUsername)) {
@@ -99,29 +100,27 @@ public class UserService {
             throw new RuntimeException("Insufficient balance");
         }
 
-        // 💰 Update balances
+        // Update balances
         sender.setBalance(sender.getBalance() - amount);
         receiver.setBalance(receiver.getBalance() + amount);
 
-        // 🔥 SAVE BOTH SIDES (IMPORTANT)
+        // Sender transaction
+        Transaction sent = new Transaction();
+        sent.setUser(sender);
+        sent.setType("TRANSFER_SENT");
+        sent.setAmount(amount);
+        sent.setTimestamp(LocalDateTime.now());
+        sent.setSender(senderUsername);
+        sent.setReceiver(receiverUsername);
 
-        // Sender view
-        Transaction sent = new Transaction(
-                sender,
-                "TRANSFER",
-                amount,
-                senderUsername,
-                receiverUsername
-        );
-
-        // Receiver view
-        Transaction received = new Transaction(
-                receiver,
-                "TRANSFER",
-                amount,
-                senderUsername,
-                receiverUsername
-        );
+        // Receiver transaction
+        Transaction received = new Transaction();
+        received.setUser(receiver);
+        received.setType("TRANSFER_RECEIVED");
+        received.setAmount(amount);
+        received.setTimestamp(LocalDateTime.now());
+        received.setSender(senderUsername);
+        received.setReceiver(receiverUsername);
 
         transactionRepository.save(sent);
         transactionRepository.save(received);
@@ -134,16 +133,14 @@ public class UserService {
     // 📜 GET TRANSACTIONS
     // ===============================
     public List<Transaction> getTransactions(String username) {
-
         User user = getUserOrThrow(username);
         return transactionRepository.findByUser(user);
     }
 
     // ===============================
-    // 🔧 HELPER METHOD
+    // 🔧 HELPER
     // ===============================
     private User getUserOrThrow(String username) {
-
         User user = userRepository.findByUsername(username);
 
         if (user == null) {

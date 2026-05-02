@@ -1,8 +1,11 @@
 package com.bank.banking.app.controller;
 
-import com.bank.banking.app.dto.LoginRequest;
 import com.bank.banking.app.dto.ApiResponse;
+import com.bank.banking.app.dto.LoginRequest;
+import com.bank.banking.app.model.User;
 import com.bank.banking.app.service.AuthService;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,6 +15,7 @@ public class AuthController {
 
     private final AuthService authService;
 
+    // ✅ Constructor Injection
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
@@ -20,32 +24,42 @@ public class AuthController {
     // 📝 REGISTER
     // ===============================
     @PostMapping("/register")
-    public ApiResponse<String> register(@RequestBody LoginRequest request) {
-
+    public ResponseEntity<ApiResponse<String>> register(@RequestBody LoginRequest request) {
         try {
             authService.register(request.getUsername(), request.getPassword());
-            return new ApiResponse<>("Registration successful", null);
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>("Registration successful", null)
+            );
 
         } catch (Exception e) {
-            return new ApiResponse<>(e.getMessage(), null);
+            return ResponseEntity.badRequest().body(
+                    new ApiResponse<>(e.getMessage(), null)
+            );
         }
     }
 
     // ===============================
-    // 🔐 LOGIN (FIXED)
+    // 🔐 LOGIN
     // ===============================
     @PostMapping("/login")
-    public ApiResponse<String> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<User>> login(@RequestBody LoginRequest request) {
 
         try {
-            // ✅ Validate user
-            authService.login(request.getUsername(), request.getPassword());
+            // ✅ MUST return User from service
+            User user = authService.login(
+                    request.getUsername(),
+                    request.getPassword()
+            );
 
-            // ✅ Only return success if valid
-            return new ApiResponse<>("Login successful", null);
+            return ResponseEntity.ok(
+                    new ApiResponse<>("Login successful", user)
+            );
 
         } catch (Exception e) {
-            return new ApiResponse<>(e.getMessage(), null);
+            return ResponseEntity.status(401).body(
+                    new ApiResponse<>(e.getMessage(), null)
+            );
         }
     }
 }

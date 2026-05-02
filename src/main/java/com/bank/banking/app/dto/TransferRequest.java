@@ -2,18 +2,26 @@ package com.bank.banking.app.dto;
 
 public class TransferRequest {
 
-    private Long receiverId;
+    private String sender;
+    private String receiver;
     private Double amount;
 
-    public TransferRequest() {
+    public TransferRequest() {}
+
+    public String getSender() {
+        return sender;
     }
 
-    public Long getReceiverId() {
-        return receiverId;
+    public void setSender(String sender) {
+        this.sender = sender;
     }
 
-    public void setReceiverId(Long receiverId) {
-        this.receiverId = receiverId;
+    public String getReceiver() {
+        return receiver;
+    }
+
+    public void setReceiver(String receiver) {
+        this.receiver = receiver;
     }
 
     public Double getAmount() {

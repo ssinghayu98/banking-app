@@ -1,6 +1,8 @@
 package com.bank.banking.app.controller;
 
 import com.bank.banking.app.dto.ApiResponse;
+import com.bank.banking.app.dto.AmountRequest;
+import com.bank.banking.app.dto.TransferRequest;
 import com.bank.banking.app.model.Transaction;
 import com.bank.banking.app.service.UserService;
 import org.springframework.web.bind.annotation.*;
@@ -30,39 +32,38 @@ public class UserController {
     }
 
     // ===============================
-    // ➕ DEPOSIT
+    // ➕ DEPOSIT (FIXED)
     // ===============================
     @PostMapping("/deposit")
-    public ApiResponse<String> deposit(@RequestParam String username,
-                                       @RequestParam Double amount) {
+    public ApiResponse<String> deposit(@RequestBody AmountRequest req) {
 
-        userService.deposit(username, amount);
+        userService.deposit(req.getUsername(), req.getAmount());
 
         return new ApiResponse<>("Deposit successful", null);
     }
 
     // ===============================
-    // ➖ WITHDRAW
+    // ➖ WITHDRAW (FIXED)
     // ===============================
     @PostMapping("/withdraw")
-    public ApiResponse<String> withdraw(@RequestParam String username,
-                                        @RequestParam Double amount) {
+    public ApiResponse<String> withdraw(@RequestBody AmountRequest req) {
 
-        userService.withdraw(username, amount);
+        userService.withdraw(req.getUsername(), req.getAmount());
 
         return new ApiResponse<>("Withdraw successful", null);
     }
 
     // ===============================
-    // 💸 TRANSFER (NEW)
+    // 💸 TRANSFER (FIXED)
     // ===============================
     @PostMapping("/transfer")
-    public ApiResponse<String> transfer(
-            @RequestParam String sender,
-            @RequestParam String receiver,
-            @RequestParam Double amount) {
+    public ApiResponse<String> transfer(@RequestBody TransferRequest req) {
 
-        userService.transfer(sender, receiver, amount);
+        userService.transfer(
+                req.getSender(),
+                req.getReceiver(),
+                req.getAmount()
+        );
 
         return new ApiResponse<>("Transfer successful", null);
     }

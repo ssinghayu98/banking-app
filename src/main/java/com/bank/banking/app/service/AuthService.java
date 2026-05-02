@@ -10,7 +10,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
 
-    // 🔥 Password encoder (IMPORTANT)
+    // 🔥 Password encoder
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AuthService(UserRepository userRepository) {
@@ -42,9 +42,9 @@ public class AuthService {
     }
 
     // ===============================
-    // 🔐 LOGIN (FIXED)
+    // 🔐 LOGIN (FINAL FIX)
     // ===============================
-    public String login(String username, String password) {
+    public User login(String username, String password) {
 
         User user = userRepository.findByUsername(username);
 
@@ -54,12 +54,9 @@ public class AuthService {
         }
 
         System.out.println("✅ USER FOUND: " + username);
-        System.out.println("DB PASSWORD (HASH): " + user.getPassword());
 
-        // 🔥 CORRECT PASSWORD CHECK
+        // 🔥 PASSWORD CHECK
         boolean isMatch = passwordEncoder.matches(password, user.getPassword());
-
-        System.out.println("PASSWORD MATCH RESULT: " + isMatch);
 
         if (!isMatch) {
             System.out.println("❌ PASSWORD DOES NOT MATCH");
@@ -68,6 +65,7 @@ public class AuthService {
 
         System.out.println("✅ LOGIN SUCCESS");
 
-        return "SUCCESS";
+        // 🔥 RETURN USER (CRITICAL FIX)
+        return user;
     }
 }

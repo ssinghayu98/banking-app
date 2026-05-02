@@ -5,27 +5,13 @@ public class ApiResponse<T> {
     private String message;
     private T data;
 
-    // ✅ Default constructor (needed for Jackson)
-    public ApiResponse() {
-    }
-
-    // ✅ All args constructor
+    // ✅ Constructor
     public ApiResponse(String message, T data) {
         this.message = message;
         this.data = data;
     }
 
-    // ✅ Static success helper (clean usage)
-    public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>("SUCCESS", data);
-    }
-
-    // ✅ Static error helper
-    public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(message, null);
-    }
-
-    // ---------------- GETTERS ----------------
+    // ✅ Getters
     public String getMessage() {
         return message;
     }
@@ -34,7 +20,7 @@ public class ApiResponse<T> {
         return data;
     }
 
-    // ---------------- SETTERS ----------------
+    // ✅ Setters (optional but good practice)
     public void setMessage(String message) {
         this.message = message;
     }
