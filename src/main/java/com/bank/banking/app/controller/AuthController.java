@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*") // allow all origins (ok for now, tighten later)
+@CrossOrigin(origins = "*") // later restrict to your Vercel domain
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
@@ -48,17 +48,20 @@ public class AuthController {
                     request.getPassword()
             );
 
+            // 🔥 IMPORTANT: never return password
+            user.setPassword(null);
+
             return ResponseEntity.ok(
                     new ApiResponse<>("Registration successful", user)
             );
 
         } catch (Exception e) {
 
-            // 🔥 PROPER LOGGING (better than printStackTrace)
-            logger.error("Registration failed", e);
+            // 🔥 Log full error in Railway
+            logger.error("Registration failed: {}", e.getMessage(), e);
 
             return ResponseEntity.badRequest().body(
-                    new ApiResponse<>(e.getMessage(), null)
+                    new ApiResponse<>("ERROR: " + e.getMessage(), null)
             );
         }
     }
@@ -81,16 +84,19 @@ public class AuthController {
                     request.getPassword()
             );
 
+            // 🔥 IMPORTANT: never return password
+            user.setPassword(null);
+
             return ResponseEntity.ok(
                     new ApiResponse<>("Login successful", user)
             );
 
         } catch (Exception e) {
 
-            logger.error("Login failed", e);
+            logger.error("Login failed: {}", e.getMessage(), e);
 
             return ResponseEntity.status(401).body(
-                    new ApiResponse<>(e.getMessage(), null)
+                    new ApiResponse<>("ERROR: " + e.getMessage(), null)
             );
         }
     }
