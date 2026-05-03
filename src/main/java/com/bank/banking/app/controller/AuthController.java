@@ -10,12 +10,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
 
-    // ✅ Constructor Injection
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
@@ -24,12 +22,23 @@ public class AuthController {
     // 📝 REGISTER
     // ===============================
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<String>> register(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<User>> register(@RequestBody LoginRequest request) {
+
         try {
-            authService.register(request.getUsername(), request.getPassword());
+            // 🔍 Basic validation
+            if (request.getUsername() == null || request.getPassword() == null) {
+                return ResponseEntity.badRequest().body(
+                        new ApiResponse<>("Username and password required", null)
+                );
+            }
+
+            User user = authService.register(
+                    request.getUsername(),
+                    request.getPassword()
+            );
 
             return ResponseEntity.ok(
-                    new ApiResponse<>("Registration successful", null)
+                    new ApiResponse<>("Registration successful", user)
             );
 
         } catch (Exception e) {
@@ -46,7 +55,12 @@ public class AuthController {
     public ResponseEntity<ApiResponse<User>> login(@RequestBody LoginRequest request) {
 
         try {
-            // ✅ MUST return User from service
+            if (request.getUsername() == null || request.getPassword() == null) {
+                return ResponseEntity.badRequest().body(
+                        new ApiResponse<>("Username and password required", null)
+                );
+            }
+
             User user = authService.login(
                     request.getUsername(),
                     request.getPassword()

@@ -10,7 +10,6 @@ public class AuthService {
 
     private final UserRepository userRepository;
 
-    // 🔥 Password encoder
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AuthService(UserRepository userRepository) {
@@ -18,33 +17,52 @@ public class AuthService {
     }
 
     // ===============================
-    // 📝 REGISTER
+    // 📝 REGISTER (FIXED)
     // ===============================
-    public String register(String username, String password) {
+    public User register(String username, String password) {
 
+        // 🔍 Validation
+        if (username == null || username.trim().isEmpty()) {
+            throw new RuntimeException("Username is required");
+        }
+
+        if (password == null || password.length() < 4) {
+            throw new RuntimeException("Password must be at least 4 characters");
+        }
+
+        // 🔍 Check existing user
         if (userRepository.findByUsername(username) != null) {
             throw new RuntimeException("Username already exists");
         }
 
-        // 🔥 HASH PASSWORD
+        // 🔐 Hash password
         String hashedPassword = passwordEncoder.encode(password);
 
+        // 👤 Create user
         User user = new User();
         user.setUsername(username);
         user.setPassword(hashedPassword);
-        user.setBalance(0.0);
 
-        userRepository.save(user);
+        // 🔥 CRITICAL FIXES (PREVENT 500 ERROR)
+        user.setBalance(0.0);
+        user.setRole("USER");
+
+        // 💾 Save
+        User savedUser = userRepository.save(user);
 
         System.out.println("✅ USER REGISTERED: " + username);
 
-        return "Registration successful";
+        return savedUser;
     }
 
     // ===============================
-    // 🔐 LOGIN (FINAL FIX)
+    // 🔐 LOGIN (FINAL)
     // ===============================
     public User login(String username, String password) {
+
+        if (username == null || password == null) {
+            throw new RuntimeException("Username and password required");
+        }
 
         User user = userRepository.findByUsername(username);
 
@@ -55,17 +73,14 @@ public class AuthService {
 
         System.out.println("✅ USER FOUND: " + username);
 
-        // 🔥 PASSWORD CHECK
-        boolean isMatch = passwordEncoder.matches(password, user.getPassword());
-
-        if (!isMatch) {
+        // 🔐 Check password
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             System.out.println("❌ PASSWORD DOES NOT MATCH");
             throw new RuntimeException("Invalid username or password");
         }
 
         System.out.println("✅ LOGIN SUCCESS");
 
-        // 🔥 RETURN USER (CRITICAL FIX)
         return user;
     }
 }
