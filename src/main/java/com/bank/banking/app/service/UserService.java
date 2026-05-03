@@ -22,21 +22,12 @@ public class UserService {
         this.transactionRepository = transactionRepository;
     }
 
-    // ===============================
-    // 💰 GET BALANCE
-    // ===============================
     public double getBalance(String username) {
         return getUserOrThrow(username).getBalance();
     }
 
-    // ===============================
-    // ➕ DEPOSIT
-    // ===============================
     public void deposit(String username, double amount) {
-
-        if (amount <= 0) {
-            throw new RuntimeException("Amount must be greater than 0");
-        }
+        if (amount <= 0) throw new RuntimeException("Amount must be greater than 0");
 
         User user = getUserOrThrow(username);
 
@@ -52,14 +43,8 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // ===============================
-    // ➖ WITHDRAW
-    // ===============================
     public void withdraw(String username, double amount) {
-
-        if (amount <= 0) {
-            throw new RuntimeException("Amount must be greater than 0");
-        }
+        if (amount <= 0) throw new RuntimeException("Amount must be greater than 0");
 
         User user = getUserOrThrow(username);
 
@@ -79,9 +64,6 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // ===============================
-    // 💸 TRANSFER (FINAL FIXED)
-    // ===============================
     @Transactional
     public void transfer(String senderUsername, String receiverUsername, double amount) {
 
@@ -100,11 +82,9 @@ public class UserService {
             throw new RuntimeException("Insufficient balance");
         }
 
-        // Update balances
         sender.setBalance(sender.getBalance() - amount);
         receiver.setBalance(receiver.getBalance() + amount);
 
-        // Sender transaction
         Transaction sent = new Transaction();
         sent.setUser(sender);
         sent.setType("TRANSFER_SENT");
@@ -113,7 +93,6 @@ public class UserService {
         sent.setSender(senderUsername);
         sent.setReceiver(receiverUsername);
 
-        // Receiver transaction
         Transaction received = new Transaction();
         received.setUser(receiver);
         received.setType("TRANSFER_RECEIVED");
@@ -129,24 +108,14 @@ public class UserService {
         userRepository.save(receiver);
     }
 
-    // ===============================
-    // 📜 GET TRANSACTIONS
-    // ===============================
     public List<Transaction> getTransactions(String username) {
         User user = getUserOrThrow(username);
         return transactionRepository.findByUser(user);
     }
 
-    // ===============================
-    // 🔧 HELPER
-    // ===============================
+    // ✅ FIXED CORE METHOD
     private User getUserOrThrow(String username) {
-        User user = userRepository.findByUsername(username);
-
-        if (user == null) {
-            throw new RuntimeException("User not found");
-        }
-
-        return user;
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
