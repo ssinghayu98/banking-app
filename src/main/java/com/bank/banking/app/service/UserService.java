@@ -35,7 +35,6 @@ public class UserService {
 
         User user = getUserOrThrow(username);
 
-        // ✅ FIX: handle null balance
         double currentBalance = user.getBalance() != null ? user.getBalance() : 0.0;
 
         user.setBalance(currentBalance + amount);
@@ -123,9 +122,9 @@ public class UserService {
         userRepository.save(receiver);
     }
 
+    // ✅ FINAL FIX HERE
     public List<Transaction> getTransactions(String username) {
-        User user = getUserOrThrow(username);
-        return transactionRepository.findByUser(user);
+        return transactionRepository.findByUserUsername(username);
     }
 
     // ✅ CORE METHOD
