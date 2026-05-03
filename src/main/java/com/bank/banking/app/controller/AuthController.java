@@ -5,13 +5,17 @@ import com.bank.banking.app.dto.LoginRequest;
 import com.bank.banking.app.model.User;
 import com.bank.banking.app.service.AuthService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*") // 🔥 allow frontend (important for prod)
+@CrossOrigin(origins = "*") // allow all origins (ok for now, tighten later)
 public class AuthController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
 
@@ -40,7 +44,7 @@ public class AuthController {
             }
 
             User user = authService.register(
-                    request.getUsername(),
+                    request.getUsername().trim(),
                     request.getPassword()
             );
 
@@ -50,8 +54,8 @@ public class AuthController {
 
         } catch (Exception e) {
 
-            // 🔥 CRITICAL: show error in Railway logs
-            e.printStackTrace();
+            // 🔥 PROPER LOGGING (better than printStackTrace)
+            logger.error("Registration failed", e);
 
             return ResponseEntity.badRequest().body(
                     new ApiResponse<>(e.getMessage(), null)
@@ -73,7 +77,7 @@ public class AuthController {
             }
 
             User user = authService.login(
-                    request.getUsername(),
+                    request.getUsername().trim(),
                     request.getPassword()
             );
 
@@ -83,8 +87,7 @@ public class AuthController {
 
         } catch (Exception e) {
 
-            // 🔥 log error (important)
-            e.printStackTrace();
+            logger.error("Login failed", e);
 
             return ResponseEntity.status(401).body(
                     new ApiResponse<>(e.getMessage(), null)
