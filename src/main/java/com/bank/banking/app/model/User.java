@@ -9,30 +9,48 @@ import java.util.List;
 @Table(name = "users")
 public class User {
 
+    // ===============================
+    // 🔑 PRIMARY KEY
+    // ===============================
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ===============================
+    // 👤 USERNAME
+    // ===============================
     @Column(unique = true, nullable = false)
     private String username;
 
+    // ===============================
+    // 🔐 PASSWORD (HIDDEN IN RESPONSE)
+    // ===============================
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
-    // 🔥 FIX: enforce not null + default
+    // ===============================
+    // 💰 BALANCE
+    // ===============================
     @Column(nullable = false)
     private Double balance = 0.0;
 
-    // 🔥 FIX: enforce not null + default
+    // ===============================
+    // 🛡 ROLE (USER / ADMIN)
+    // ===============================
     @Column(nullable = false)
     private String role = "USER";
 
-    // 🔥 FIX: prevent infinite recursion in API response
+    // ===============================
+    // 🔁 RELATION (FIXED RECURSION)
+    // ===============================
     @JsonIgnore
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Transaction> transactions;
 
-    // ---------------- CONSTRUCTORS ----------------
+    // ===============================
+    // 🏗 CONSTRUCTORS
+    // ===============================
     public User() {}
 
     public User(String username, String password, Double balance, String role) {
@@ -42,7 +60,9 @@ public class User {
         this.role = role;
     }
 
-    // ---------------- GETTERS ----------------
+    // ===============================
+    // 📥 GETTERS
+    // ===============================
     public Long getId() {
         return id;
     }
@@ -67,7 +87,9 @@ public class User {
         return transactions;
     }
 
-    // ---------------- SETTERS ----------------
+    // ===============================
+    // 📤 SETTERS
+    // ===============================
     public void setId(Long id) {
         this.id = id;
     }
