@@ -1,6 +1,4 @@
-
 package com.bank.banking.app.controller;
-
 
 import com.bank.banking.app.dto.ApiResponse;
 import com.bank.banking.app.dto.AmountRequest;
@@ -13,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/user") // ✅ FIXED (important for your frontend URL)
+@RequestMapping("/api/user")
 @CrossOrigin(origins = "*")
 public class UserController {
 
@@ -23,50 +21,36 @@ public class UserController {
         this.userService = userService;
     }
 
-    // ===============================
-    // 💰 GET BALANCE
-    // ===============================
+    // 💰 BALANCE
     @GetMapping("/balance")
     public ApiResponse<Double> getBalance(@RequestParam String username) {
-
-        double balance = userService.getBalance(username);
-
-        return new ApiResponse<>("Balance fetched successfully", balance);
+        return new ApiResponse<>("Balance fetched successfully",
+                userService.getBalance(username));
     }
 
-    // ===============================
-    // ➕ DEPOSIT (DEBUG + SAFE)
-    // ===============================
+    // ➕ DEPOSIT
     @PostMapping("/deposit")
     public ResponseEntity<?> deposit(@RequestBody AmountRequest req) {
         try {
-            System.out.println("Deposit Request: username=" + req.getUsername() + ", amount=" + req.getAmount());
-
-            if (req.getUsername() == null || req.getAmount() == null) {
-                throw new RuntimeException("Username or Amount is missing");
-            }
-
-            if (req.getAmount() <= 0) {
-                throw new RuntimeException("Invalid amount");
-            }
+            validate(req.getUsername(), req.getAmount());
 
             userService.deposit(req.getUsername(), req.getAmount());
 
             return ResponseEntity.ok(new ApiResponse<>("Deposit successful", null));
-
         } catch (Exception e) {
-            e.printStackTrace(); // 🔥 THIS will show real error in Railway
+            e.printStackTrace();
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 
-    // ===============================
     // ➖ WITHDRAW
-    // ===============================
     @PostMapping("/withdraw")
     public ResponseEntity<?> withdraw(@RequestBody AmountRequest req) {
         try {
+            validate(req.getUsername(), req.getAmount());
+
             userService.withdraw(req.getUsername(), req.getAmount());
+
             return ResponseEntity.ok(new ApiResponse<>("Withdraw successful", null));
         } catch (Exception e) {
             e.printStackTrace();
@@ -74,17 +58,16 @@ public class UserController {
         }
     }
 
-    // ===============================
     // 💸 TRANSFER
-    // ===============================
     @PostMapping("/transfer")
     public ResponseEntity<?> transfer(@RequestBody TransferRequest req) {
         try {
-            userService.transfer(
-                    req.getSender(),
-                    req.getReceiver(),
-                    req.getAmount()
-            );
+            if (req.getSender() == null || req.getReceiver() == null || req.getAmount() == null) {
+                throw new RuntimeException("Missing transfer data");
+            }
+
+            userService.transfer(req.getSender(), req.getReceiver(), req.getAmount());
+
             return ResponseEntity.ok(new ApiResponse<>("Transfer successful", null));
         } catch (Exception e) {
             e.printStackTrace();
@@ -92,14 +75,22 @@ public class UserController {
         }
     }
 
-    // ===============================
-    // 📜 GET TRANSACTIONS
-    // ===============================
+    // 📜 TRANSACTIONS
     @GetMapping("/transactions")
     public ApiResponse<List<Transaction>> getTransactions(@RequestParam String username) {
+        return new ApiResponse<>(
+                "Transactions fetched successfully",
+                userService.getTransactions(username)
+        );
+    }
 
-        List<Transaction> transactions = userService.getTransactions(username);
-
-        return new ApiResponse<>("Transactions fetched successfully", transactions);
+    // 🔒 COMMON VALIDATION
+    private void validate(String username, Double amount) {
+        if (username == null || username.isEmpty()) {
+            throw new RuntimeException("Username missing");
+        }
+        if (amount == null || amount <= 0) {
+            throw new RuntimeException("Invalid amount");
+        }
     }
 }
