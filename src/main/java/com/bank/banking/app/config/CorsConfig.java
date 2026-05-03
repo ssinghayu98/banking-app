@@ -15,16 +15,30 @@ public class CorsConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
+        // 🔥 IMPORTANT
         config.setAllowCredentials(true);
 
-        // ✅ Allow both local + production frontend
+        // ✅ Allow frontend (local + Vercel)
         config.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:3000",
                 "https://*.vercel.app"
         ));
 
+        // ✅ Allow everything needed
         config.setAllowedHeaders(Arrays.asList("*"));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        config.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+
+        // 🔥 VERY IMPORTANT (fixes many CORS issues)
+        config.setExposedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type"
+        ));
+
+        // 🔥 cache preflight (optional but good)
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
