@@ -23,15 +23,22 @@ public class UserService {
     }
 
     public double getBalance(String username) {
-        return getUserOrThrow(username).getBalance();
+        User user = getUserOrThrow(username);
+        return user.getBalance() != null ? user.getBalance() : 0.0;
     }
 
     public void deposit(String username, double amount) {
-        if (amount <= 0) throw new RuntimeException("Amount must be greater than 0");
+
+        if (amount <= 0) {
+            throw new RuntimeException("Amount must be greater than 0");
+        }
 
         User user = getUserOrThrow(username);
 
-        user.setBalance(user.getBalance() + amount);
+        // ✅ FIX: handle null balance
+        double currentBalance = user.getBalance() != null ? user.getBalance() : 0.0;
+
+        user.setBalance(currentBalance + amount);
 
         Transaction transaction = new Transaction();
         transaction.setUser(user);
@@ -44,15 +51,20 @@ public class UserService {
     }
 
     public void withdraw(String username, double amount) {
-        if (amount <= 0) throw new RuntimeException("Amount must be greater than 0");
+
+        if (amount <= 0) {
+            throw new RuntimeException("Amount must be greater than 0");
+        }
 
         User user = getUserOrThrow(username);
 
-        if (user.getBalance() < amount) {
+        double currentBalance = user.getBalance() != null ? user.getBalance() : 0.0;
+
+        if (currentBalance < amount) {
             throw new RuntimeException("Insufficient balance");
         }
 
-        user.setBalance(user.getBalance() - amount);
+        user.setBalance(currentBalance - amount);
 
         Transaction transaction = new Transaction();
         transaction.setUser(user);
@@ -78,12 +90,15 @@ public class UserService {
         User sender = getUserOrThrow(senderUsername);
         User receiver = getUserOrThrow(receiverUsername);
 
-        if (sender.getBalance() < amount) {
+        double senderBalance = sender.getBalance() != null ? sender.getBalance() : 0.0;
+        double receiverBalance = receiver.getBalance() != null ? receiver.getBalance() : 0.0;
+
+        if (senderBalance < amount) {
             throw new RuntimeException("Insufficient balance");
         }
 
-        sender.setBalance(sender.getBalance() - amount);
-        receiver.setBalance(receiver.getBalance() + amount);
+        sender.setBalance(senderBalance - amount);
+        receiver.setBalance(receiverBalance + amount);
 
         Transaction sent = new Transaction();
         sent.setUser(sender);
@@ -113,7 +128,7 @@ public class UserService {
         return transactionRepository.findByUser(user);
     }
 
-    // ✅ FIXED CORE METHOD
+    // ✅ CORE METHOD
     private User getUserOrThrow(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));

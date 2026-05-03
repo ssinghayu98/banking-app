@@ -5,12 +5,13 @@ import com.bank.banking.app.dto.AmountRequest;
 import com.bank.banking.app.dto.TransferRequest;
 import com.bank.banking.app.model.Transaction;
 import com.bank.banking.app.service.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/user") // ✅ FIXED (important for your frontend URL)
 @CrossOrigin(origins = "*")
 public class UserController {
 
@@ -32,40 +33,61 @@ public class UserController {
     }
 
     // ===============================
-    // ➕ DEPOSIT (FIXED)
+    // ➕ DEPOSIT (DEBUG + SAFE)
     // ===============================
     @PostMapping("/deposit")
-    public ApiResponse<String> deposit(@RequestBody AmountRequest req) {
+    public ResponseEntity<?> deposit(@RequestBody AmountRequest req) {
+        try {
+            System.out.println("Deposit Request: username=" + req.getUsername() + ", amount=" + req.getAmount());
 
-        userService.deposit(req.getUsername(), req.getAmount());
+            if (req.getUsername() == null || req.getAmount() == null) {
+                throw new RuntimeException("Username or Amount is missing");
+            }
 
-        return new ApiResponse<>("Deposit successful", null);
+            if (req.getAmount() <= 0) {
+                throw new RuntimeException("Invalid amount");
+            }
+
+            userService.deposit(req.getUsername(), req.getAmount());
+
+            return ResponseEntity.ok(new ApiResponse<>("Deposit successful", null));
+
+        } catch (Exception e) {
+            e.printStackTrace(); // 🔥 THIS will show real error in Railway
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
     // ===============================
-    // ➖ WITHDRAW (FIXED)
+    // ➖ WITHDRAW
     // ===============================
     @PostMapping("/withdraw")
-    public ApiResponse<String> withdraw(@RequestBody AmountRequest req) {
-
-        userService.withdraw(req.getUsername(), req.getAmount());
-
-        return new ApiResponse<>("Withdraw successful", null);
+    public ResponseEntity<?> withdraw(@RequestBody AmountRequest req) {
+        try {
+            userService.withdraw(req.getUsername(), req.getAmount());
+            return ResponseEntity.ok(new ApiResponse<>("Withdraw successful", null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
     // ===============================
-    // 💸 TRANSFER (FIXED)
+    // 💸 TRANSFER
     // ===============================
     @PostMapping("/transfer")
-    public ApiResponse<String> transfer(@RequestBody TransferRequest req) {
-
-        userService.transfer(
-                req.getSender(),
-                req.getReceiver(),
-                req.getAmount()
-        );
-
-        return new ApiResponse<>("Transfer successful", null);
+    public ResponseEntity<?> transfer(@RequestBody TransferRequest req) {
+        try {
+            userService.transfer(
+                    req.getSender(),
+                    req.getReceiver(),
+                    req.getAmount()
+            );
+            return ResponseEntity.ok(new ApiResponse<>("Transfer successful", null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
     // ===============================
