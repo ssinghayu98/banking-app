@@ -14,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/user") // ✅ FIXED (important for your frontend URL)
+@CrossOrigin(origins = "*")
 public class UserController {
 
     private final UserService userService;
