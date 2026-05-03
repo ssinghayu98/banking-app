@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin(origins = "*") // 🔥 allow frontend (important for prod)
 public class AuthController {
 
     private final AuthService authService;
@@ -25,10 +26,16 @@ public class AuthController {
     public ResponseEntity<ApiResponse<User>> register(@RequestBody LoginRequest request) {
 
         try {
-            // 🔍 Basic validation
-            if (request.getUsername() == null || request.getPassword() == null) {
+            // 🔍 Validation
+            if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(
-                        new ApiResponse<>("Username and password required", null)
+                        new ApiResponse<>("Username is required", null)
+                );
+            }
+
+            if (request.getPassword() == null || request.getPassword().length() < 4) {
+                return ResponseEntity.badRequest().body(
+                        new ApiResponse<>("Password must be at least 4 characters", null)
                 );
             }
 
@@ -42,6 +49,10 @@ public class AuthController {
             );
 
         } catch (Exception e) {
+
+            // 🔥 CRITICAL: show error in Railway logs
+            e.printStackTrace();
+
             return ResponseEntity.badRequest().body(
                     new ApiResponse<>(e.getMessage(), null)
             );
@@ -71,6 +82,10 @@ public class AuthController {
             );
 
         } catch (Exception e) {
+
+            // 🔥 log error (important)
+            e.printStackTrace();
+
             return ResponseEntity.status(401).body(
                     new ApiResponse<>(e.getMessage(), null)
             );
