@@ -7,6 +7,18 @@ public class UserResponseDto {
     private Double balance;
     private String role;
 
+    // ✅ No-args constructor (IMPORTANT for serialization)
+    public UserResponseDto() {
+    }
+
+    // ✅ All-args constructor (for easy mapping)
+    public UserResponseDto(Long id, String username, Double balance, String role) {
+        this.id = id;
+        this.username = username;
+        this.balance = balance;
+        this.role = role;
+    }
+
     // ✅ GETTERS
     public Long getId() {
         return id;
