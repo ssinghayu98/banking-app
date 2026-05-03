@@ -1,6 +1,8 @@
 package com.bank.banking.app.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
@@ -17,12 +19,16 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    // 🔥 FIX: enforce not null + default
+    @Column(nullable = false)
     private Double balance = 0.0;
 
-    // ✅ ROLE (for future admin/user separation)
-    private String role;
+    // 🔥 FIX: enforce not null + default
+    @Column(nullable = false)
+    private String role = "USER";
 
-    // ✅ RELATION WITH TRANSACTIONS
+    // 🔥 FIX: prevent infinite recursion in API response
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Transaction> transactions;
 

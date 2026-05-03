@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final UserRepository userRepository;
-
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AuthService(UserRepository userRepository) {
@@ -17,7 +16,7 @@ public class AuthService {
     }
 
     // ===============================
-    // 📝 REGISTER (FIXED)
+    // 📝 REGISTER
     // ===============================
     public User register(String username, String password) {
 
@@ -26,9 +25,12 @@ public class AuthService {
             throw new RuntimeException("Username is required");
         }
 
-        if (password == null || password.length() < 4) {
+        if (password == null || password.trim().length() < 4) {
             throw new RuntimeException("Password must be at least 4 characters");
         }
+
+        // 🔥 Normalize username
+        username = username.trim().toLowerCase();
 
         // 🔍 Check existing user
         if (userRepository.findByUsername(username) != null) {
@@ -43,11 +45,11 @@ public class AuthService {
         user.setUsername(username);
         user.setPassword(hashedPassword);
 
-        // 🔥 CRITICAL FIXES (PREVENT 500 ERROR)
+        // 🔥 REQUIRED FIELDS (CRITICAL)
         user.setBalance(0.0);
         user.setRole("USER");
 
-        // 💾 Save
+        // 💾 Save user
         User savedUser = userRepository.save(user);
 
         System.out.println("✅ USER REGISTERED: " + username);
@@ -56,7 +58,7 @@ public class AuthService {
     }
 
     // ===============================
-    // 🔐 LOGIN (FINAL)
+    // 🔐 LOGIN
     // ===============================
     public User login(String username, String password) {
 
@@ -64,22 +66,22 @@ public class AuthService {
             throw new RuntimeException("Username and password required");
         }
 
+        username = username.trim().toLowerCase();
+
         User user = userRepository.findByUsername(username);
 
         if (user == null) {
-            System.out.println("❌ USER NOT FOUND");
+            System.out.println("❌ USER NOT FOUND: " + username);
             throw new RuntimeException("Invalid username or password");
         }
 
-        System.out.println("✅ USER FOUND: " + username);
-
-        // 🔐 Check password
+        // 🔐 Password match
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            System.out.println("❌ PASSWORD DOES NOT MATCH");
+            System.out.println("❌ WRONG PASSWORD for: " + username);
             throw new RuntimeException("Invalid username or password");
         }
 
-        System.out.println("✅ LOGIN SUCCESS");
+        System.out.println("✅ LOGIN SUCCESS: " + username);
 
         return user;
     }
