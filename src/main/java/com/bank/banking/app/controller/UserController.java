@@ -1,4 +1,6 @@
+
 package com.bank.banking.app.controller;
+
 
 import com.bank.banking.app.dto.ApiResponse;
 import com.bank.banking.app.dto.AmountRequest;
@@ -12,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/user") // ✅ FIXED (important for your frontend URL)
-@CrossOrigin(origins = "*")
 public class UserController {
 
     private final UserService userService;

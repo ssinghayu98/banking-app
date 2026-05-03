@@ -17,7 +17,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ enable CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
@@ -34,31 +34,17 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        // 🔥 REQUIRED when using cookies / credentials
-        config.setAllowCredentials(true);
+        // ❌ DO NOT use true with wildcard → causes failure
+        config.setAllowCredentials(false);
 
-        // ✅ allow your frontend
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:3000",
-                "https://*.vercel.app"
-        ));
+        // ✅ Allow all origins (safe for your project stage)
+        config.setAllowedOrigins(List.of("*"));
 
-        // ✅ allow all headers
         config.setAllowedHeaders(List.of("*"));
 
-        // ✅ allow all required methods
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
-
-        // 🔥 IMPORTANT (fixes many frontend issues)
-        config.setExposedHeaders(List.of(
-                "Authorization",
-                "Content-Type"
-        ));
-
-        // 🔥 improves preflight performance
-        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
