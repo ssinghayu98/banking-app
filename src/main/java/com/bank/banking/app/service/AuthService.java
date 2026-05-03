@@ -20,41 +20,35 @@ public class AuthService {
     // ===============================
     public User register(String username, String password) {
 
-        // 🔍 Validation
-        if (username == null || username.trim().isEmpty()) {
-            throw new RuntimeException("Username is required");
+        try {
+            if (username == null || username.trim().isEmpty()) {
+                throw new RuntimeException("Username is required");
+            }
+
+            if (password == null || password.trim().length() < 4) {
+                throw new RuntimeException("Password must be at least 4 characters");
+            }
+
+            username = username.trim().toLowerCase();
+
+            if (userRepository.findByUsername(username) != null) {
+                throw new RuntimeException("Username already exists");
+            }
+
+            String hashedPassword = passwordEncoder.encode(password);
+
+            User user = new User();
+            user.setUsername(username);
+            user.setPassword(hashedPassword);
+            user.setBalance(0.0);
+            user.setRole("USER");
+
+            return userRepository.save(user);
+
+        } catch (Exception e) {
+            e.printStackTrace(); // shows in Railway logs
+            throw new RuntimeException("Registration failed: " + e.getMessage());
         }
-
-        if (password == null || password.trim().length() < 4) {
-            throw new RuntimeException("Password must be at least 4 characters");
-        }
-
-        // 🔥 Normalize username
-        username = username.trim().toLowerCase();
-
-        // 🔍 Check existing user
-        if (userRepository.findByUsername(username) != null) {
-            throw new RuntimeException("Username already exists");
-        }
-
-        // 🔐 Hash password
-        String hashedPassword = passwordEncoder.encode(password);
-
-        // 👤 Create user
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(hashedPassword);
-
-        // 🔥 REQUIRED FIELDS (CRITICAL)
-        user.setBalance(0.0);
-        user.setRole("USER");
-
-        // 💾 Save user
-        User savedUser = userRepository.save(user);
-
-        System.out.println("✅ USER REGISTERED: " + username);
-
-        return savedUser;
     }
 
     // ===============================
@@ -71,17 +65,12 @@ public class AuthService {
         User user = userRepository.findByUsername(username);
 
         if (user == null) {
-            System.out.println("❌ USER NOT FOUND: " + username);
             throw new RuntimeException("Invalid username or password");
         }
 
-        // 🔐 Password match
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            System.out.println("❌ WRONG PASSWORD for: " + username);
             throw new RuntimeException("Invalid username or password");
         }
-
-        System.out.println("✅ LOGIN SUCCESS: " + username);
 
         return user;
     }
