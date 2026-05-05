@@ -1,84 +1,54 @@
-# 🏦 Banking Application (Full Stack)
+# 🏦 Bankify – Full Stack Banking Application (Backend)
 
-A complete full-stack banking system built using modern technologies.
+A production-ready backend for a full-stack banking system built using Spring Boot.  
+Provides secure REST APIs for authentication, transactions, and account management.
 
 ---
 
-## 🚀 Features
+## 🚀 Live Demo
 
-### 👤 User Features
-
-* Register & Login (BCrypt authentication)
-* Deposit & Withdraw money
-* Transfer funds between users
-* View transaction history
-* Dashboard with recent activity
-
-### 👑 Admin Features
-
-* View all users
-* View all transactions
-* Admin deposit & withdraw
-* Delete users
+🔗 Frontend: https://banking-frontend-aepchrm4m-ssinghayu98s-projects.vercel.app
+🔗 Backend API: https://banking-app-production-54bc.up.railway.app  
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Backend
-
-* Java
-* Spring Boot
-* Spring Data JPA
-* MySQL
-* BCrypt Authentication
+- Java
+- Spring Boot
+- Spring Data JPA (Hibernate)
+- Spring Security (basic)
+- MySQL (Railway)
+- BCrypt Password Encryption
 
 ### Frontend
+- React.js
+- Tailwind CSS
+- React Router
 
-* React.js
-* Tailwind CSS
-* React Router
+### Deployment
+- Backend: Railway
+- Frontend: Vercel
+- Database: Railway MySQL
+
+---
+
+## ✨ Features
+
+### 👤 User Features
+- Secure user registration & login (BCrypt hashed passwords)
+- Deposit & withdraw money
+- Transfer funds between users
+- View transaction history with timestamps
+- Dashboard with real-time balance
+
+### 👑 Admin Features
+- View all users
+- View all transactions
+- Manage user accounts
+- Perform admin-level operations
 
 ---
 
 ## 📂 Project Structure
-
-```
-banking-app/
-├── backend (Spring Boot)
-├── frontend (React App)
-```
-
----
-
-## ⚙️ How to Run
-
-### Backend
-
-```
-cd backend
-mvn spring-boot:run
-```
-
-### Frontend
-
-```
-cd frontend
-npm install
-npm start
-```
-
----
-
-## 🌟 Future Improvements
-
-* JWT Authentication
-* Deployment (Render + Vercel)
-* UI animations & charts
-* Role-based security (real)
-
----
-
-## 👨‍💻 Author
-
-Ayush Singh
