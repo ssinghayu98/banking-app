@@ -5,16 +5,15 @@ import com.bank.banking.app.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public AuthService(UserRepository userRepository) {
         this.userRepository = userRepository;
+        this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
     // ===============================
@@ -32,23 +31,20 @@ public class AuthService {
 
         username = username.trim().toLowerCase();
 
-        // ✅ FIXED: Proper Optional handling
-        Optional<User> existingUser = userRepository.findByUsername(username);
-        if (existingUser.isPresent()) {
+        if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Username already exists");
         }
 
-        // ✅ Hash password
         String hashedPassword = passwordEncoder.encode(password);
 
-        // ✅ Create user
+        System.out.println("🔐 REGISTER HASH: " + hashedPassword);
+
         User user = new User();
         user.setUsername(username);
         user.setPassword(hashedPassword);
         user.setBalance(0.0);
         user.setRole("USER");
 
-        // ✅ SAVE TO DB (CRITICAL)
         return userRepository.save(user);
     }
 
@@ -63,16 +59,18 @@ public class AuthService {
 
         username = username.trim().toLowerCase();
 
-        // ✅ FIXED: Optional
-        Optional<User> optionalUser = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
 
-        if (optionalUser.isEmpty()) {
-            throw new RuntimeException("Invalid username or password");
-        }
+        System.out.println("👤 LOGIN USER: " + username);
+        System.out.println("🔑 RAW PASSWORD: " + password);
+        System.out.println("🔐 DB HASH: " + user.getPassword());
 
-        User user = optionalUser.get();
+        boolean match = passwordEncoder.matches(password, user.getPassword());
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        System.out.println("✅ PASSWORD MATCH: " + match);
+
+        if (!match) {
             throw new RuntimeException("Invalid username or password");
         }
 
