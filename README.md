@@ -7,7 +7,7 @@ Provides secure REST APIs for authentication, transactions, and account manageme
 
 ## 🚀 Live Demo
 
-🔗 Frontend: https://banking-frontend-aepchrm4m-ssinghayu98s-projects.vercel.app
+🔗 Frontend: banking-frontend-jop78jxfa-ssinghayu98s-projects.vercel.app
 🔗 Backend API: https://banking-app-production-54bc.up.railway.app  
 
 ---
