@@ -2,12 +2,9 @@ package com.bank.banking.app.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.*;
 
 import java.util.List;
 
@@ -21,20 +18,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
-
-                        // Allow preflight requests
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Public auth APIs
-                        .requestMatchers("/api/auth/**").permitAll()
-
-                        // Swagger
                         .requestMatchers(
+                                "/api/auth/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
-
-                        // Everything else
                         .anyRequest().permitAll()
                 );
 
@@ -46,11 +34,8 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowCredentials(true);
-
         config.setAllowedOrigins(List.of(
-                "https://banking-frontend-sigma.vercel.app",
-                "http://localhost:5173"
+                "https://banking-frontend-sigma.vercel.app"
         ));
 
         config.setAllowedMethods(List.of(
@@ -63,10 +48,7 @@ public class SecurityConfig {
 
         config.setAllowedHeaders(List.of("*"));
 
-        config.setExposedHeaders(List.of(
-                "Authorization",
-                "Content-Type"
-        ));
+        config.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
