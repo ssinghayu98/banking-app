@@ -21,6 +21,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/swagger-ui/**",
+                                "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
                         .anyRequest().permitAll()
@@ -34,8 +35,9 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-                "https://banking-frontend-sigma.vercel.app"
+        // Allow all Vercel deployments
+        config.setAllowedOriginPatterns(List.of(
+                "https://*.vercel.app"
         ));
 
         config.setAllowedMethods(List.of(
@@ -47,6 +49,8 @@ public class SecurityConfig {
         ));
 
         config.setAllowedHeaders(List.of("*"));
+
+        config.setExposedHeaders(List.of("*"));
 
         config.setAllowCredentials(false);
 
